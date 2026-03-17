@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  # Nosso serviço principal da web (A aplicação)
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mvc_frankenphp
+    ports:
+      # A porta da esquerda (Seu PC) aponta para a porta da direita (Dentro do docker virtual)
+      - "8000:8000"
+    environment:
+      - APP_ENV=local
+      - MERCURE_PUBLISHER_JWT_KEY=!ChangeThisMercureHubJWTSecretKey!
+      - MERCURE_SUBSCRIBER_JWT_KEY=!ChangeThisMercureHubJWTSecretKey!
+      - MERCURE_URL=http://localhost:8000/.well-known/mercure
+      - MERCURE_PUBLIC_URL=http://localhost:8000/.well-known/mercure
+    volumes:
+      - .:/app
+      - ./Caddyfile:/etc/frankenphp/Caddyfile
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  # Banco de Dados Redis para Cache e Filas
+  redis:
+    image: redis:alpine
+    container_name: mvc_redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
