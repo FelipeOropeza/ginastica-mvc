@@ -97,16 +97,16 @@ Permitir ao Admin criar e gerenciar competições/eventos e aos atletas se inscr
 - [ ] `php forge make:model ResultModel` → `belongsTo event`, `belongsTo user`
 
 #### 🎮 Controllers (Admin)
-- [ ] `php forge make:controller Admin/CompetitionController`
-  - `#[Get('/admin/competicoes')]` → listar todas
-  - `#[Get('/admin/competicoes/criar')]` → form criar
-  - `#[Post('/admin/competicoes/criar')]` → salvar
-  - `#[Get('/admin/competicoes/{id}/editar')]` → form editar
-  - `#[Post('/admin/competicoes/{id}/editar')]` → atualizar
-  - `#[Post('/admin/competicoes/{id}/deletar')]` → remover
-- [ ] `php forge make:controller Admin/EventController`
-  - CRUD de eventos dentro de uma competição
-  - Atribuição de juízes ao evento (`JudgeAssignment`)
+- [x] `php forge make:controller Admin/CompetitionController` (Refatorado para Service + DTO)
+  - [x] `#[Get('/admin/competicoes')]` → listar todas
+  - [x] `#[Get('/admin/competicoes/criar')]` → form criar
+  - [x] `#[Post('/admin/competicoes/criar')]` → salvar
+  - [x] `#[Get('/admin/competicoes/{id}/editar')]` → form editar
+  - [x] `#[Post('/admin/competicoes/{id}/editar')]` → atualizar
+  - [x] `#[Post('/admin/competicoes/{id}/deletar')]` → remover
+- [x] `php forge make:controller Admin/EventController` (Refatorado para ProvaController com Service + DTO)
+  - [x] CRUD de eventos dentro de uma competição
+  - [ ] Atribuição de juízes ao evento (`JudgeAssignment`)
 - [ ] `php forge make:controller Admin/UserController`
   - Listar atletas e juízes
   - Criar juízes (admin cadastra manualmente)
@@ -118,18 +118,18 @@ Permitir ao Admin criar e gerenciar competições/eventos e aos atletas se inscr
   - `#[Get('/atleta/minhas-inscricoes')]` → ver próprias inscrições
 
 #### 🖥️ Views (HTMX-driven)
-- [ ] Layout base admin com sidebar
-- [ ] Tabela de competições com ações (editar/deletar via HTMX)
-  - `hx-delete`, `hx-confirm`, `hx-swap="outerHTML"`
-- [ ] Modal de criação/edição de competição (HTMX)
-  - `hx-get` para abrir modal, `hx-post` para submeter
+- [x] Layout base admin com sidebar
+- [x] Tabela de competições com ações (editar/deletar via HTMX)
+  - [x] `hx-delete`, `hx-confirm`, `hx-swap="outerHTML"`
+- [x] Modal de criação/edição de competição (HTMX) - *Implementado via páginas completas, conversão para Modal e HTMX total pendente*
+  - [ ] `hx-get` para abrir modal, `hx-post` para submeter
 - [ ] Componente de card de competição para o atleta
   - `php forge make:component CompetitionCard`
 - [ ] Componente de listagem de eventos com botão de inscrição
   - `php forge make:component EventListComponent`
 
 #### ✅ Validações (PHP Attributes)
-- [ ] Validar campos de competição (nome obrigatório, data futura, etc.)
+- [x] Validar campos de competição (nome obrigatório, data futura, etc.) via DTO
 - [ ] `php forge make:rule DataFuturaRule` → validar que a data da competição é no futuro
 
 ---

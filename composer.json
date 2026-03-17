@@ -40,5 +40,8 @@
     },
     "scripts": {
         "start": "php -S localhost:8000 -t public"
+    },
+    "config": {
+        "process-timeout": 0
     }
 }

@@ -120,6 +120,14 @@ abstract class Model implements \JsonSerializable
     }
 
     /**
+     * Facilita chamadas estáticas (Ex: User::find(1) em vez de (new User)->find(1))
+     */
+    public static function __callStatic(string $name, array $arguments): mixed
+    {
+        return (new static())->$name(...$arguments);
+    }
+
+    /**
      * Valida os dados informados de acordo com os Atributos PHP (#[Required], etc) da Model.
      * Funciona em formato Active Record, segurando e bloqueando a Request caso inviável.
      * 
@@ -199,6 +207,43 @@ abstract class Model implements \JsonSerializable
     }
 
     /**
+     * Salva o estado atual do objeto no banco de dados.
+     * Decide automaticamente entre INSERT ou UPDATE.
+     * 
+     * @return bool
+     */
+    public function save(): bool
+    {
+        $pk = $this->primaryKey;
+        $data = [];
+
+        // Coleta todas as propriedades dynamic/public do objeto para o array de dados
+        $raw = (array) $this;
+        foreach ($raw as $key => $value) {
+            $cleanKey = ltrim($key, "\0");
+            $cleanKey = preg_replace('/^[^\0]+\0/', '', $cleanKey) ?: $cleanKey;
+
+            // Pula propriedades do framework
+            if (in_array($cleanKey, ['db', 'table', 'primaryKey', 'fillable', 'hidden', 'timestamps', 'softDeletes', 'loadedRelations', 'relationDefinitionMode'], true)) {
+                continue;
+            }
+            $data[$cleanKey] = $value;
+        }
+
+        if (isset($this->$pk) && $this->$pk) {
+            return $this->update($this->$pk, $data);
+        }
+
+        $id = $this->insert($data);
+        if ($id > 0) {
+            $this->$pk = $id;
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
      * Insere um novo registro no banco de dados
      *
      * @param array $data Ex: ['nome' => 'Felipe', 'email' => 'felipe@etc.com']
@@ -272,8 +317,14 @@ abstract class Model implements \JsonSerializable
      * @param mixed $id
      * @return bool
      */
-    public function delete(mixed $id): bool
+    public function delete(mixed $id = null): bool
     {
+        $id = $id ?? ($this->{$this->primaryKey} ?? null);
+
+        if (!$id) {
+            return false;
+        }
+
         if (property_exists($this, 'softDeletes') && $this->softDeletes) {
             $sql = "UPDATE {$this->table} SET deleted_at = :deleted_at WHERE {$this->primaryKey} = :id";
             $stmt = $this->db->prepare($sql);

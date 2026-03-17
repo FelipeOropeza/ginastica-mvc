@@ -5,7 +5,7 @@ namespace App\Controllers;
 use Core\Http\Response;
 use App\DTOs\Auth\LoginDTO;
 use App\DTOs\Auth\RegisterDTO;
-use App\Models\Usuario;
+use Core\Attributes\Route\Get;
 
 class AuthController
 {
@@ -26,9 +26,14 @@ class AuthController
         $usuario = $this->authService->login($dto);
 
         // Armazena na sessão
-        session()->set('user', ['id' => $usuario->id, 'nome' => $usuario->nome, 'email' => $usuario->email]);
+        session()->set('user', [
+            'id' => $usuario->id, 
+            'nome' => $usuario->nome, 
+            'email' => $usuario->email,
+            'role' => $usuario->role->nome ?? 'user'
+        ]);
 
-        return Response::makeRedirect('/dashboard');
+        return redirect($this->getRedirectByRole($usuario->role->nome ?? 'user'));
     }
 
     public function registerForm()
@@ -40,11 +45,30 @@ class AuthController
     {
         $usuario = $this->authService->registrar($dto);
 
-        session()->set('user', ['id' => $usuario->id, 'nome' => $usuario->nome, 'email' => $usuario->email]);
+        session()->set('user', [
+            'id' => $usuario->id, 
+            'nome' => $usuario->nome, 
+            'email' => $usuario->email,
+            'role' => $usuario->role->nome ?? 'user'
+        ]);
 
-        return Response::makeRedirect('/dashboard');
+        return redirect($this->getRedirectByRole($usuario->role->nome ?? 'user'));
     }
 
+    /**
+     * Define o destino do redirecionamento baseado no papel do usuário.
+     */
+    private function getRedirectByRole(string $role): string
+    {
+        return match ($role) {
+            'admin', 'operador' => '/admin/dashboard',
+            'jurado', 'juiz'    => '/juiz/dashboard',
+            'atleta'            => '/atleta/dashboard',
+            default             => '/dashboard',
+        };
+    }
+
+    #[Get('/logout')]
     public function logout()
     {
         session()->remove('user');

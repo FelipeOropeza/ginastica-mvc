@@ -11,9 +11,10 @@ class RolesSeeder
         $pdo = Connection::getInstance();
 
         $roles = [
-            ['nome' => 'admin',    'descricao' => 'Administrador do sistema — controle total'],
+            ['nome' => 'admin',    'descricao' => 'Administrador — controle total'],
             ['nome' => 'operador', 'descricao' => 'Operador — gerencia competições e inscrições'],
             ['nome' => 'jurado',   'descricao' => 'Jurado — avalia atletas e registra notas'],
+            ['nome' => 'atleta',   'descricao' => 'Atleta — participa de competições e consulta resultados'],
         ];
 
         $stmt = $pdo->prepare(

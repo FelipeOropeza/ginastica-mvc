@@ -15,9 +15,9 @@ class AuthService
         $this->usuarioModel = new Usuario();
     }
 
-    public function login(LoginDTO $dto): object
+    public function login(LoginDTO $dto): Usuario
     {
-        $usuario = $this->usuarioModel->where('email', '=', $dto->email)->first();
+        $usuario = $this->usuarioModel->where('email', '=', $dto->email)->with('role')->first();
 
         if (!$usuario || !password_verify($dto->senha, $usuario->senha)) {
             fail_validation(['email' => 'As credenciais informadas são inválidas.']);
@@ -29,27 +29,17 @@ class AuthService
         return $usuario;
     }
 
-    public function registrar(RegisterDTO $dto): object
+    public function registrar(RegisterDTO $dto): Usuario
     {
-        // Validação adicional de confirmação de senha
-        if ($dto->senha !== $dto->senha_confirmacao) {
-            fail_validation(['senha_confirmacao' => 'A confirmação de senha não coincide.']);
-        }
-
-        if ($this->usuarioModel->where('email', '=', $dto->email)->first()) {
-            fail_validation(['email' => 'Este e-mail já está em uso.']);
-        }
-
         $data = $dto->toArray();
         unset($data['senha_confirmacao']);
         
-        $data['senha'] = password_hash($data['senha'], PASSWORD_DEFAULT);
+        // Define papel padrão (ID 1 = admin)
+        $data['role_id'] = 1; 
+        $data['ativo'] = 1;
+
         $id = $this->usuarioModel->insert($data);
 
-        return (object)[
-            'id' => $id,
-            'nome' => $dto->nome,
-            'email' => $dto->email
-        ];
+        return $this->usuarioModel->with('role')->where('id', '=', $id)->first();
     }
 }

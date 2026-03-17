@@ -5,3 +5,4 @@ vendor/
 .env
 .cache/
 storage/framework/
+docs/

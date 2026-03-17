@@ -13,7 +13,9 @@ use Core\Routing\Route;
 
 // Route::get('/', [HomeController::class, 'index']);
 
-
+Route::get('/', function () {
+    return redirect('/login');
+});
 
 // Inclui Rotas de Autenticação Auxiliares
 require_once __DIR__ . '/auth.php';
