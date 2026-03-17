@@ -17,4 +17,19 @@ class Atleta extends Model
         'categoria_id', 
         'ativo'
     ];
+
+    public function usuario()
+    {
+        return $this->belongsTo(Usuario::class, 'usuario_id');
+    }
+
+    public function equipe()
+    {
+        return $this->belongsTo(Equipe::class, 'equipe_id');
+    }
+
+    public function categoria()
+    {
+        return $this->belongsTo(Categoria::class, 'categoria_id');
+    }
 }

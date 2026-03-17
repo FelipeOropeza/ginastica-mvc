@@ -6,7 +6,16 @@ use Core\Database\Model;
 
 class Equipe extends Model
 {
-    // A tabela será deduzida automaticamente como nome da classe + s (ex: "Usuarios")
-    // Descomente a linha abaixo para forçar o nome da tabela no BD:
-    // protected $table = 'nome_da_minha_tabela';
+    protected ?string $table = 'equipes';
+    protected array $fillable = [
+        'nome',
+        'sigla',
+        'pais',
+        'ativo'
+    ];
+
+    public function atletas()
+    {
+        return $this->hasMany(Atleta::class, 'equipe_id');
+    }
 }

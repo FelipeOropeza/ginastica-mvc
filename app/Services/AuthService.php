@@ -34,11 +34,22 @@ class AuthService
         $data = $dto->toArray();
         unset($data['senha_confirmacao']);
         
-        // Define papel padrão (ID 1 = admin)
-        $data['role_id'] = 1; 
+        // Busca o papel de atleta no banco
+        $roleAtleta = (new \App\Models\Role())->where('nome', 'atleta')->first();
+        
+        $data['role_id'] = $roleAtleta ? $roleAtleta->id : 4; // Fallback para ID 4 se não achar
         $data['ativo'] = 1;
 
         $id = $this->usuarioModel->insert($data);
+
+        // Se for atleta, cria o perfil básico na tabela 'atletas'
+        if ($roleAtleta && $data['role_id'] == $roleAtleta->id) {
+            (new \App\Models\Atleta())->insert([
+                'usuario_id' => $id,
+                'nome_completo' => $data['nome'],
+                'ativo' => 1
+            ]);
+        }
 
         return $this->usuarioModel->with('role')->where('id', '=', $id)->first();
     }

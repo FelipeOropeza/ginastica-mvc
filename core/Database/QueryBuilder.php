@@ -399,12 +399,15 @@ class QueryBuilder
 
                 $dictionary = [];
                 foreach ($relatedModels as $r) {
-                    $dictionary[$r->{$def->localKey}] = $r;
+                    $key = $r->{$def->localKey};
+                    if ($key !== null) {
+                        $dictionary[$key] = $r;
+                    }
                 }
 
                 foreach ($models as $m) {
                     $val = $m->{$def->foreignKey};
-                    $m->setRelation($relationMethod, $dictionary[$val] ?? null);
+                    $m->setRelation($relationMethod, $val !== null ? ($dictionary[$val] ?? null) : null);
                 }
             } elseif ($def->type === 'hasMany') {
                 $ids = [];
