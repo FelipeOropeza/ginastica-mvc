@@ -32,4 +32,22 @@ class Atleta extends Model
     {
         return $this->belongsTo(Categoria::class, 'categoria_id');
     }
+
+    public function inscricoes()
+    {
+        return $this->hasMany(Inscricao::class, 'atleta_id');
+    }
+
+    /**
+     * Retorna a melhor pontuação do atleta em qualquer prova.
+     */
+    public function melhorNota()
+    {
+        return (new Resultado())
+            ->select('resultados.*')
+            ->join('inscricoes', 'inscricoes.id = resultados.inscricao_id')
+            ->where('inscricoes.atleta_id', '=', $this->id)
+            ->orderBy('resultados.nota_final', 'DESC')
+            ->first();
+    }
 }

@@ -6,7 +6,14 @@ use Core\Database\Model;
 
 class Resultado extends Model
 {
-    // A tabela será deduzida automaticamente como nome da classe + s (ex: "Usuarios")
-    // Descomente a linha abaixo para forçar o nome da tabela no BD:
-    // protected $table = 'nome_da_minha_tabela';
+    protected ?string $table = 'resultados';
+    protected array $fillable = [
+        'inscricao_id', 'nota_d', 'nota_e', 'penalidade', 
+        'nota_final', 'classificacao', 'podio', 'calculado'
+    ];
+
+    public function inscricao()
+    {
+        return $this->belongsTo(Inscricao::class, 'inscricao_id');
+    }
 }

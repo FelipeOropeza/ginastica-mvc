@@ -9,8 +9,9 @@ class Equipe extends Model
     protected ?string $table = 'equipes';
     protected array $fillable = [
         'nome',
-        'sigla',
-        'pais',
+        'cidade',
+        'estado',
+        'cores',
         'ativo'
     ];
 

@@ -81,24 +81,27 @@
         
         <nav class="flex-1 px-3 space-y-1 mt-2">
             <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider px-3 mb-2 opacity-50">Menu</div>
-            <a href="/admin/dashboard" class="nav-link <?= str_contains($_SERVER['REQUEST_URI'], 'dashboard') ? 'active' : '' ?>">
+            <a href="<?= route('admin.dashboard') ?>" class="nav-link <?= str_contains($_SERVER['REQUEST_URI'], 'dashboard') ? 'active' : '' ?>">
                 <i class="fa-solid fa-chart-pie w-4"></i> Dashboard
             </a>
-            <a href="/admin/competicoes" class="nav-link <?= str_contains($_SERVER['REQUEST_URI'], 'competicoes') ? 'active' : '' ?>">
+            <a href="<?= route('admin.competicoes.index') ?>" class="nav-link <?= str_contains($_SERVER['REQUEST_URI'], 'competicoes') ? 'active' : '' ?>">
                 <i class="fa-solid fa-calendar-check w-4"></i> Competições
             </a>
-            <a href="/admin/usuarios" class="nav-link <?= str_contains($_SERVER['REQUEST_URI'], 'usuarios') ? 'active' : '' ?>">
+            <a href="<?= route('admin.usuarios.index') ?>" class="nav-link <?= (str_contains($_SERVER['REQUEST_URI'], 'usuarios') && !str_contains($_SERVER['REQUEST_URI'], 'role=jurado')) ? 'active' : '' ?>">
                 <i class="fa-solid fa-users w-4"></i> Usuários
             </a>
-            <a href="/admin/atletas" class="nav-link <?= str_contains($_SERVER['REQUEST_URI'], 'atletas') ? 'active' : '' ?>">
+            <a href="<?= route('admin.atletas.index') ?>" class="nav-link <?= str_contains($_SERVER['REQUEST_URI'], 'atletas') ? 'active' : '' ?>">
                 <i class="fa-solid fa-person-running w-4"></i> Atletas
+            </a>
+            <a href="<?= route('admin.usuarios.index', ['role' => 'jurado']) ?>" class="nav-link <?= str_contains($_SERVER['REQUEST_URI'], 'role=jurado') ? 'active' : '' ?>">
+                <i class="fa-solid fa-gavel w-4"></i> Jurados
             </a>
             
             <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider px-3 mt-6 mb-2 opacity-50">Configurações</div>
-            <a href="/admin/equipes" class="nav-link <?= str_contains($_SERVER['REQUEST_URI'], 'equipes') ? 'active' : '' ?>">
+            <a href="<?= route('admin.equipes.index') ?>" class="nav-link <?= str_contains($_SERVER['REQUEST_URI'], 'equipes') ? 'active' : '' ?>">
                 <i class="fa-solid fa-users-viewfinder w-4"></i> Equipes
             </a>
-            <a href="/admin/categorias" class="nav-link <?= str_contains($_SERVER['REQUEST_URI'], 'categorias') ? 'active' : '' ?>">
+            <a href="<?= route('admin.categorias.index') ?>" class="nav-link <?= str_contains($_SERVER['REQUEST_URI'], 'categorias') ? 'active' : '' ?>">
                 <i class="fa-solid fa-layer-group w-4"></i> Categorias
             </a>
         </nav>

@@ -52,6 +52,16 @@
                     <input type="number" name="num_jurados" value="3" min="1" max="10" class="form-input">
                 </div>
 
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Máx. Participantes</label>
+                    <input type="number" name="max_participantes" placeholder="Ex: 20" min="1" class="form-input">
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Descrição</label>
+                    <textarea name="descricao" rows="2" placeholder="Opcional..." class="form-input"></textarea>
+                </div>
+
                 <button type="submit" class="btn btn-primary w-full mt-2">
                     Adicionar Prova
                 </button>
@@ -103,14 +113,23 @@
                                     $cat = reset($cat);
                                     echo $cat ? $cat->nome : 'N/A';
                                 ?>
-                            </h4>
+                                </h4>
                             
+                            <?php if ($prova->descricao): ?>
+                                <p class="text-[10px] text-slate-400 italic mb-3 line-clamp-1" title="<?= e($prova->descricao) ?>">
+                                    <?= e($prova->descricao) ?>
+                                </p>
+                            <?php endif; ?>
+
                             <div class="flex flex-wrap gap-1.5 mt-3">
                                 <span class="px-1.5 py-0.5 rounded bg-slate-100 text-[9px] font-bold text-slate-500 uppercase border border-slate-200/50">
                                     <?= str_replace('_', ' ', $prova->tipo_calculo) ?>
                                 </span>
                                 <span class="px-1.5 py-0.5 rounded bg-slate-100 text-[9px] font-bold text-slate-500 uppercase border border-slate-200/50">
                                     <?= $prova->num_jurados ?> Juízes
+                                </span>
+                                <span class="px-1.5 py-0.5 rounded bg-amber-50 text-[9px] font-bold text-amber-600 uppercase border border-amber-200/30">
+                                    <i class="fa-solid fa-users mr-1"></i> <?= $prova->max_participantes ?: 'Ilimitado' ?>
                                 </span>
                             </div>
                         </div>

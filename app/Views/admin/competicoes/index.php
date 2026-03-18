@@ -54,24 +54,46 @@
                                 <?= e($comp->local) ?>
                             </td>
                             <td class="px-5 py-4">
-                                <?php 
-                                    $statusClasses = [
-                                        'rascunho' => 'bg-slate-100 text-slate-600',
-                                        'aberta' => 'bg-green-50 text-green-700 border border-green-200',
-                                        'em_andamento' => 'bg-blue-50 text-blue-700 border border-blue-200',
-                                        'encerrada' => 'bg-red-50 text-red-700 border border-red-200',
-                                    ];
-                                    $statusLabels = [
-                                        'rascunho' => 'Rascunho',
-                                        'aberta' => 'Aberta',
-                                        'em_andamento' => 'Ativa',
-                                        'encerrada' => 'Finalizada',
-                                    ];
-                                    $classe = $statusClasses[$comp->status] ?? 'bg-slate-100 text-slate-600';
-                                ?>
-                                <span class="px-2 py-0.5 rounded text-[9px] uppercase tracking-tighter font-bold <?= $classe ?>">
-                                    <?= $statusLabels[$comp->status] ?? e($comp->status) ?>
-                                </span>
+                                <div class="relative inline-block" x-data="{ open: false }">
+                                    <?php 
+                                        $statusClasses = [
+                                            'rascunho' => 'bg-slate-100 text-slate-600',
+                                            'aberta' => 'bg-green-50 text-green-700 border border-green-200',
+                                            'em_andamento' => 'bg-blue-50 text-blue-700 border border-blue-200',
+                                            'encerrada' => 'bg-red-50 text-red-700 border border-red-200',
+                                        ];
+                                        $statusLabels = [
+                                            'rascunho' => 'Rascunho',
+                                            'aberta' => 'Aberta',
+                                            'em_andamento' => 'Ativa',
+                                            'encerrada' => 'Finalizada',
+                                        ];
+                                        $classe = $statusClasses[$comp->status] ?? 'bg-slate-100 text-slate-600';
+                                    ?>
+                                    <button @click="open = !open; $event.stopPropagation()" id="status-badge-<?= $comp->id ?>" class="px-2 py-0.5 rounded text-[9px] uppercase tracking-tighter font-bold transition-all hover:brightness-95 <?= $classe ?>">
+                                        <?= $statusLabels[$comp->status] ?? e($comp->status) ?>
+                                        <i class="fa-solid fa-chevron-down ml-1 opacity-50"></i>
+                                    </button>
+
+                                    <div x-show="open" @click.away="open = false" class="absolute left-0 mt-1 w-40 bg-white rounded-lg shadow-xl border border-slate-100 z-50 py-1" style="display: none;">
+                                        <?php foreach($statusLabels as $val => $label): ?>
+                                            <button 
+                                                hx-post="<?= route('admin.competicoes.status', ['id' => $comp->id]) ?>"
+                                                hx-vals='{"status": "<?= $val ?>"}'
+                                                hx-headers='{"X-CSRF-TOKEN": "<?= csrf_token() ?>"}'
+                                                hx-target="#status-badge-<?= $comp->id ?>"
+                                                hx-swap="outerHTML"
+                                                @click="open = false"
+                                                class="w-full text-left px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-600 hover:bg-slate-50 hover:text-primary-600 transition-all flex items-center justify-between"
+                                            >
+                                                <?= $label ?>
+                                                <?php if($comp->status === $val): ?>
+                                                    <i class="fa-solid fa-check text-primary-500"></i>
+                                                <?php endif; ?>
+                                            </button>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
                             </td>
                             <td class="px-5 py-4 text-right">
                                 <div class="flex justify-end gap-1.5">

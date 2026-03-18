@@ -15,7 +15,7 @@ class CreateNotasTable
             // nota_d = Dificuldade (painel D)
             // nota_e = Execução (painel E, 0-10)
             // penalidade = Deduções do árbitro superior
-            $table->enum('criterio', ['nota_d', 'nota_e', 'penalidade'])->nullable();
+            $table->enum('criterio', ['nota_d', 'nota_e', 'penalidade', 'arbitro_superior', 'geral'])->nullable();
             $table->decimal('valor', 5, 3);              // Ex: 9.250, 5.600
             $table->text('observacao')->nullable();
             $table->timestamp('registrado_em')->nullable();

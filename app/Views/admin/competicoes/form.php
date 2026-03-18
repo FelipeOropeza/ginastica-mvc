@@ -14,6 +14,10 @@
     <form action="<?= isset($competicao) ? route('admin.competicoes.update', ['id' => $competicao->id]) : route('admin.competicoes.store') ?>" method="POST" class="space-y-6">
         <?= csrf_field() ?>
         
+        <?php if (isset($competicao)): ?>
+            <input type="hidden" name="id" value="<?= $competicao->id ?>">
+        <?php endif; ?>
+        
         <div class="card p-8">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="md:col-span-2">
@@ -71,6 +75,30 @@
                     <?php if (errors('descricao')): ?>
                         <p class="text-red-500 text-xs mt-1 font-bold"><?= e(errors('descricao')) ?></p>
                     <?php endif; ?>
+                </div>
+
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Status da Competição</label>
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                        <?php 
+                            $statusOptions = [
+                                'rascunho' => ['label' => 'Rascunho', 'color' => 'slate', 'icon' => 'fa-file-lines'],
+                                'aberta'   => ['label' => 'Aberta (Inscrições)', 'color' => 'green', 'icon' => 'fa-door-open'],
+                                'em_andamento' => ['label' => 'Em Andamento', 'color' => 'blue', 'icon' => 'fa-person-running'],
+                                'encerrada' => ['label' => 'Encerrada', 'color' => 'red', 'icon' => 'fa-calendar-check'],
+                            ];
+                            $currentStatus = old('status', $competicao->status ?? 'rascunho');
+                        ?>
+                        <?php foreach($statusOptions as $val => $opt): ?>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="status" value="<?= $val ?>" class="peer hidden" <?= $currentStatus === $val ? 'checked' : '' ?>>
+                                <div class="peer-checked:border-primary-600 peer-checked:bg-primary-50 border-2 border-slate-100 rounded-xl p-4 flex flex-col items-center gap-2 hover:border-slate-200 transition-all">
+                                    <i class="fa-solid <?= $opt['icon'] ?> text-lg text-<?= $opt['color'] ?>-500"></i>
+                                    <span class="text-[10px] font-bold uppercase tracking-widest text-slate-600"><?= $opt['label'] ?></span>
+                                </div>
+                            </label>
+                        <?php endforeach; ?>
+                    </div>
                 </div>
             </div>
         </div>

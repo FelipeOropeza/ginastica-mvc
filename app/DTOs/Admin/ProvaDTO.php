@@ -25,4 +25,10 @@ class ProvaDTO extends DataTransferObject
     #[IsInt(message: 'O número de jurados deve ser um número inteiro.')]
     #[Min(1, 'Mínimo de 1 jurado.')]
     public int $num_jurados = 3;
+
+    public ?string $descricao = null;
+
+    #[IsInt(message: 'O número máximo de participantes deve ser um número inteiro.')]
+    #[Min(1, 'O número máximo de participantes deve ser pelo menos 1.')]
+    public ?int $max_participantes = null;
 }

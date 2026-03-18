@@ -12,9 +12,16 @@ class UserService
     /**
      * Retorna todos os usuários com seus respectivos papéis.
      */
-    public function getAll()
+    public function getAll(?string $role = null)
     {
-        return (new Usuario())->with('role')->get();
+        $query = (new Usuario())->with('role')->select('usuarios.*');
+
+        if ($role) {
+            $query->join('roles', 'roles.id = usuarios.role_id')
+                  ->where('roles.nome', '=', $role);
+        }
+
+        return $query->get();
     }
 
     /**
@@ -47,7 +54,7 @@ class UserService
      */
     public function findById(int $id)
     {
-        $usuario = (new Usuario())->with('role')->where('id', $id)->first();
+        $usuario = (new Usuario())->with('role')->select('usuarios.*')->where('usuarios.id', $id)->first();
         if (!$usuario) {
             throw new HttpException("Usuário não encontrado.", 404);
         }

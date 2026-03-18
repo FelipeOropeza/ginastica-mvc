@@ -379,6 +379,15 @@ abstract class Model implements \JsonSerializable
     }
 
     /**
+     * Define as colunas que devem ser selecionadas.
+     * Ex: $produto->select('id, nome, preco')->get();
+     */
+    public function select(string $columns): QueryBuilder
+    {
+        return $this->newQuery()->select($columns);
+    }
+
+    /**
      * Inicia uma verificação fluente na Tabela
      * Ex: $produto->where('preco', '>', 50)->get();
      */
@@ -405,7 +414,6 @@ abstract class Model implements \JsonSerializable
 
     /**
      * Inicia um JOIN fluente entre tabelas.
-     * Ex: $produto->join('categorias', 'categorias.id = produtos.categoria_id')->get();
      */
     public function join(string $table, string $condition, string $type = 'INNER'): QueryBuilder
     {
@@ -413,12 +421,51 @@ abstract class Model implements \JsonSerializable
     }
 
     /**
-     * Inicia uma verificação fluente IN na Tabela
-     * Ex: $produto->whereIn('id', [1,2,3])->get();
+     * Inicia um LEFT JOIN fluente.
      */
-    public function whereIn(string $column, array $values): QueryBuilder
+    public function leftJoin(string $table, string $condition): QueryBuilder
+    {
+        return $this->newQuery()->leftJoin($table, $condition);
+    }
+
+    /**
+     * Adiciona uma verificação IS NULL.
+     */
+    public function whereNull(string $column): QueryBuilder
+    {
+        return $this->newQuery()->whereNull($column);
+    }
+
+    /**
+     * Adiciona uma verificação IS NOT NULL.
+     */
+    public function whereNotNull(string $column): QueryBuilder
+    {
+        return $this->newQuery()->whereNotNull($column);
+    }
+
+    /**
+     * Inicia uma verificação fluente OR na Tabela
+     */
+    public function orWhere(string|\Closure $column, ?string $operator = null, mixed $value = null): QueryBuilder
+    {
+        return $this->newQuery()->orWhere($column, $operator, $value);
+    }
+
+    /**
+     * Inicia uma verificação fluente IN na Tabela
+     */
+    public function whereIn(string $column, array|\Closure $values): QueryBuilder
     {
         return $this->newQuery()->whereIn($column, $values);
+    }
+
+    /**
+     * Inicia uma verificação fluente OR IN na Tabela
+     */
+    public function orWhereIn(string $column, array $values): QueryBuilder
+    {
+        return $this->newQuery()->orWhereIn($column, $values);
     }
 
     /**

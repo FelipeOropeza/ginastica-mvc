@@ -16,8 +16,8 @@ class ProfileController
     #[Get('/atleta/perfil', name: 'atleta.profile')]
     public function edit()
     {
-        $userId = session()->get('user.id');
-        $atleta = (new Atleta())->where('usuario_id', '=', $userId)->first();
+        $usuarioId = session('user')['id'];
+        $atleta = (new Atleta())->where('usuario_id', '=', $usuarioId)->first();
         
         $equipes = (new Equipe())->where('ativo', '=', 1)->get();
         $categorias = (new Categoria())->all();
@@ -33,18 +33,14 @@ class ProfileController
     #[Post('/atleta/perfil/update', name: 'atleta.profile.update')]
     public function update()
     {
-        $userId = session()->get('user.id');
-        $atleta = (new Atleta())->where('usuario_id', '=', $userId)->first();
+        $usuarioId = session('user')['id'];
+        $atleta = (new Atleta())->where('usuario_id', '=', $usuarioId)->first();
         
         if (!$atleta) {
             $atleta = new Atleta();
-            $atleta->usuario_id = $userId;
+            $atleta->usuario_id = $usuarioId;
         }
         
-        var_dump($userId);
-        var_dump($atleta);
-        die();
-
         $atleta->nome_completo = request()->get('nome_completo');
         $atleta->data_nascimento = request()->get('data_nascimento');
         $atleta->cpf = request()->get('cpf');

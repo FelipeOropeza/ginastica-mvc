@@ -31,6 +31,8 @@ class ProvaService
         $prova->aparelho = $dto->aparelho;
         $prova->tipo_calculo = $dto->tipo_calculo;
         $prova->num_jurados = $dto->num_jurados;
+        $prova->descricao = $dto->descricao;
+        $prova->max_participantes = $dto->max_participantes;
         $prova->save();
 
         return $prova;

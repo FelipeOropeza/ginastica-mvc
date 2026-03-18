@@ -22,11 +22,14 @@ class UserController
     #[Get('/admin/usuarios', name: 'admin.usuarios.index')]
     public function index()
     {
-        $usuarios = $this->service->getAll();
+        $role = request()->get('role');
+        $usuarios = $this->service->getAll($role);
+        $title = $role ? 'Gestão de ' . ucfirst($role) . 's' : 'Gestão de Usuários';
         
         return view('admin/usuarios/index', [
-            'title' => 'Gestão de Usuários',
-            'usuarios' => $usuarios
+            'title' => $title,
+            'usuarios' => $usuarios,
+            'currentRole' => $role
         ]);
     }
 
@@ -52,6 +55,7 @@ class UserController
     public function edit(int $id)
     {
         $usuario = $this->service->findById($id);
+
         $roles = $this->service->getRoles();
 
         return view('admin/usuarios/form', [
