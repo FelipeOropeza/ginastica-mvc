@@ -23,7 +23,7 @@ class RegisterDTO extends DataTransferObject
     #[Required(message: 'A senha é obrigatória.')]
     #[Min(8, message: 'A senha deve ter no mínimo 8 caracteres.')]
     #[Hash]
-     public string $senha;
+    public string $senha;
 
     #[Required(message: 'A confirmação de senha é obrigatória.')]
     #[MatchField('senha', message: 'As senhas não coincidem.')]
