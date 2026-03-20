@@ -21,15 +21,22 @@ class AvaliacaoService
         // Encontra as provas designadas ao jurado
         $designacoes = (new JuradoDesignacao())
             ->where('usuario_id', '=', $juradoId)
-            ->with(['prova.competicao'])
+            ->with(['prova.competicao', 'prova.categoria'])
             ->get();
 
         $competicoes = [];
         foreach ($designacoes as $d) {
             $comp = $d->prova->competicao;
+            if (!$comp) continue;
+            
             if (!isset($competicoes[$comp->id])) {
+                // Preparamos a lista de provas do jurado dentro da competição
+                $comp->minhas_provas = [];
                 $competicoes[$comp->id] = $comp;
             }
+            
+            // Atribuímos a prova e a designação diretamente ao objeto competição
+            $competicoes[$comp->id]->minhas_provas[] = $d;
         }
 
         return array_values($competicoes);
@@ -201,6 +208,8 @@ class AvaliacaoService
         $numVotosTotal = count($votosD) + count($votosE) + count($votosGeral);
         $resultado->calculado = ($numVotosTotal >= ($prova->num_jurados ?? 3));
 
-        $resultado->save();
+        if ($resultado->save()) {
+            Resultado::calcularRanking($inscricao->prova_id);
+        }
     }
 }

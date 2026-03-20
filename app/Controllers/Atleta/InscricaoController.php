@@ -15,39 +15,90 @@ use Core\Attributes\Route\Middleware;
 class InscricaoController
 {
     /**
-     * Lista competições que estão abertas para inscrição.
+     * Dashboard principal do atleta com resumo e competições abertas.
      */
-    #[Get('/atleta/competicoes', name: 'atleta.competicoes.index')]
-    public function index()
+    #[Get('/atleta/dashboard', name: 'atleta.dashboard')]
+    public function dashboard()
     {
+        $usuarioId = session('user')['id'];
+        $atleta = (new Atleta())
+            ->where('usuario_id', '=', $usuarioId)
+            ->with(['equipe', 'categoria'])
+            ->first();
+
+        if (!$atleta) {
+            return view('atleta/perfil_incompleto', [
+                'title' => 'Perfil Incompleto'
+            ]);
+        }
+
+        // Estatísticas para os cards
+        $totalInscricoes = (new Inscricao())->where('atleta_id', '=', $atleta->id)->count();
+        $melhorRes = $atleta->melhorNota();
+        $melhorNota = $melhorRes ? $melhorRes->nota_final : '--';
+        
+        // Atividades Recentes (últimas 5)
+        $atividades = (new Inscricao())
+            ->where('atleta_id', '=', $atleta->id)
+            ->with(['competicao', 'prova', 'resultado'])
+            ->orderBy('inscrito_em', 'DESC')
+            ->limit(5)
+            ->get();
+
+        // Competições abertas para inscrição
         $competicoes = (new Competicao())
             ->where('status', '=', 'aberta')
             ->orderBy('data_inicio', 'ASC')
             ->get();
 
-        return view('atleta/inscricoes/index', [
-            'title' => 'Competições Disponíveis',
-            'competicoes' => $competicoes
+        // Check if profile is missing critical data for auto-enrollment
+        $perfilIncompleto = (!$atleta->equipe_id || !$atleta->categoria_id || !$atleta->data_nascimento);
+
+        return view('atleta/dashboard', [
+            'title' => 'Painel do Atleta',
+            'atleta' => $atleta,
+            'totalInscricoes' => $totalInscricoes,
+            'melhorNota' => $melhorNota,
+            'atividades' => $atividades,
+            'competicoes' => $competicoes,
+            'perfilIncompleto' => $perfilIncompleto
         ]);
     }
 
     /**
-     * Lista as inscrições do próprio atleta logado.
+     * Lista todas as competições.
      */
-    #[Get('/atleta/minhas-inscricoes', name: 'atleta.inscricoes.me')]
-    public function me()
+    #[Get('/atleta/competicoes', name: 'atleta.competicoes.index')]
+    public function index()
     {
         $usuarioId = session('user')['id'];
         $atleta = (new Atleta())->where('usuario_id', '=', $usuarioId)->first();
 
-        if (!$atleta) {
-            return Response::makeRedirect('/atleta/perfil');
-        }
+        $competicoes = (new Competicao())
+            ->where('status', '!=', 'rascunho')
+            ->orderBy('data_inicio', 'DESC')
+            ->get();
+
+        return view('atleta/inscricoes/index', [
+            'title' => 'Competições',
+            'competicoes' => $competicoes,
+            'atleta' => $atleta
+        ]);
+    }
+
+    /**
+     * Lista as inscrições do atleta.
+     */
+    #[Get('/atleta/minhas-inscricoes', name: 'atleta.inscricoes.minhas')]
+    public function minhas()
+    {
+        $usuarioId = session('user')['id'];
+        $atleta = (new Atleta())->where('usuario_id', '=', $usuarioId)->first();
 
         $inscricoes = (new Inscricao())
             ->where('atleta_id', '=', $atleta->id)
             ->with(['competicao', 'prova', 'resultado', 'notas.jurado'])
-            ->orderBy('id', 'DESC')
+            ->orderBy('inscrito_em', 'DESC')
             ->get();
 
         return view('atleta/inscricoes/minhas', [
@@ -57,114 +108,101 @@ class InscricaoController
     }
 
     /**
-     * Mostra os detalhes de uma competição e as provas disponíveis.
+     * Retorna o formulário (modal) de inscrição filtrado por categoria.
      */
-    #[Get('/atleta/competicoes/{id}/detalhes', name: 'atleta.competicoes.detalhes')]
-    public function detalhes(int $id)
+    #[Get('/atleta/competicoes/{id}/inscrever', name: 'atleta.competicoes.form')]
+    public function formInscricao(int $id)
     {
         $usuarioId = session('user')['id'];
         $atleta = (new Atleta())->where('usuario_id', '=', $usuarioId)->first();
-
-        if (!$atleta || !$atleta->categoria_id) {
-            session()->flash('message', 'Complete seu perfil com sua categoria antes de se inscrever.');
-            return Response::makeRedirect('/atleta/perfil');
-        }
-
-        $competicao = (new Competicao())->where('id', '=', $id)->first();
+        
+        $competicao = (new Competicao())->find($id);
 
         if (!$competicao || $competicao->status !== 'aberta') {
-            return Response::makeRedirect('/atleta/competicoes');
+            return new Response("<div class='p-4 text-red-500 font-bold'>Inscrições encerradas ou competição não encontrada.</div>");
         }
 
-        // Listar provas da categoria do atleta nesta competição
+        // Provas desta competição que batem com a categoria do atleta
         $provas = (new Prova())
             ->where('competicao_id', '=', $id)
             ->where('categoria_id', '=', $atleta->categoria_id)
             ->get();
 
-        // Calcular vagas ocupadas para cada prova
+        // Contagem de inscrições por prova
         foreach ($provas as $prova) {
-            $prova->vagas_ocupadas = (new Inscricao())->where('prova_id', '=', $prova->id)->count();
+            $prova->inscritos_count = (new Inscricao())->where('prova_id', '=', $prova->id)->count();
         }
 
-        // Buscar inscrições já realizadas pelo atleta nesta competição
-        $minhasInscricoes = (new Inscricao())
+        // IDs das provas que ele já se inscreveu
+        $jaInscritas = (new Inscricao())
             ->where('atleta_id', '=', $atleta->id)
             ->where('competicao_id', '=', $id)
             ->get();
+        $inscritoIds = array_map(fn($i) => $i->prova_id, $jaInscritas);
 
-        $idsProvasInscritas = array_map(fn($i) => $i->prova_id, $minhasInscricoes);
-
-        // Filtrar as provas: não mostrar as que ele já se inscreveu
-        $provas = array_filter($provas, function($p) use ($idsProvasInscritas) {
-            return !in_array($p->id, $idsProvasInscritas);
-        });
-
-        return view('atleta/inscricoes/detalhes', [
-            'title' => 'Detalhes da Competição',
+        return view('atleta/partials/modal_inscricao', [
             'competicao' => $competicao,
             'provas' => $provas,
             'atleta' => $atleta,
-            'idsProvasInscritas' => $idsProvasInscritas
+            'inscritoIds' => $inscritoIds
         ]);
     }
 
     /**
-     * Processa a inscrição do atleta em uma prova.
+     * Salva as inscrições do atleta.
      */
-    #[Post('/atleta/inscricoes/inscrever', name: 'atleta.inscricoes.store')]
+    #[Post('/atleta/competicoes/store', name: 'atleta.competicoes.store')]
     public function store()
     {
         $usuarioId = session('user')['id'];
         $atleta = (new Atleta())->where('usuario_id', '=', $usuarioId)->first();
-        $provaId = (int) request()->get('prova_id');
-        $competicaoId = (int) request()->get('competicao_id');
+        $provas_id = request()->get('provas_id', []);
+        $competicao_id = (int) request()->get('competicao_id');
 
         if (!$atleta || !$atleta->ativo) {
-            return Response::makeJson(['status' => 'error', 'message' => 'Você precisa estar com perfil ativo para se inscrever.'], 403);
+            return new Response("<div class='mb-4 p-3 bg-red-100 text-red-700 rounded'>Sua conta está inativa ou perfil incompleto.</div>");
         }
 
-        // Verificar se a prova é válida e da categoria do atleta
-        $prova = (new Prova())->find($provaId);
-        if (!$prova || $prova->categoria_id != $atleta->categoria_id || $prova->competicao_id != $competicaoId) {
-             return Response::makeJson(['status' => 'error', 'message' => 'Prova inválida ou de categoria diferente da sua.'], 400);
+        if (empty($provas_id)) {
+            return new Response("<div class='mb-4 p-3 bg-red-100 text-red-700 rounded'>Selecione pelo menos uma prova.</div>");
         }
 
-        // Verificar limite de participantes
-        if ($prova->max_participantes > 0) {
-            $inscritosAtuais = (new Inscricao())->where('prova_id', '=', $provaId)->count();
-            if ($inscritosAtuais >= $prova->max_participantes) {
-                return Response::makeJson(['status' => 'error', 'message' => 'Desculpe, esta prova já atingiu o limite máximo de inscritos.'], 400);
+        foreach ($provas_id as $pid) {
+            $prova = (new Prova())->find($pid);
+            if (!$prova) continue;
+
+            // Validação de categoria (segurança)
+            if ($prova->categoria_id != $atleta->categoria_id) continue;
+
+            // Validação de limite de vagas
+            if ($prova->max_participantes > 0) {
+                $count = (new Inscricao())->where('prova_id', '=', $pid)->count();
+                if ($count >= $prova->max_participantes) continue;
+            }
+
+            // Evitar duplicidade
+            $exist = (new Inscricao())->where('atleta_id', '=', $atleta->id)->where('prova_id', '=', $pid)->first();
+
+            if (!$exist) {
+                (new Inscricao())->insert([
+                    'atleta_id' => $atleta->id,
+                    'competicao_id' => $competicao_id,
+                    'prova_id' => $pid,
+                    'status' => 'confirmada',
+                    'inscrito_em' => date('Y-m-d H:i:s')
+                ]);
             }
         }
 
-        // Verificar se já está inscrito
-        $existe = (new Inscricao())
-            ->where('atleta_id', '=', $atleta->id)
-            ->where('prova_id', '=', $provaId)
-            ->first();
-
-        if ($existe) {
-            return Response::makeJson(['status' => 'error', 'message' => 'Você já está inscrito nesta prova.'], 400);
+        if (request()->isHtmx()) {
+            return new Response("<script>window.location.reload();</script>");
         }
 
-        // Realizar inscrição
-        $inscricao = new Inscricao();
-        $inscricao->atleta_id = $atleta->id;
-        $inscricao->competicao_id = $competicaoId;
-        $inscricao->prova_id = $provaId;
-        $inscricao->status = 'confirmada'; // Ou 'pendente' se houver aprovação do admin/treinador
-        $inscricao->inscrito_em = date('Y-m-d H:i:s');
-        
-        if ($inscricao->save()) {
-            return Response::makeRedirect(route('atleta.competicoes.detalhes', ['id' => $competicaoId]));
-        }
-
-        return Response::makeJson(['status' => 'error', 'message' => 'Erro ao realizar inscrição.'], 500);
+        return Response::makeRedirect('/atleta/dashboard');
     }
 
     /**
-     * Remove uma inscrição (Desinscrever).
+     * Remove uma inscrição específica.
      */
     #[Post('/atleta/inscricoes/{id}/deletar', name: 'atleta.inscricoes.destroy')]
     public function destroy(int $id)
@@ -172,29 +210,26 @@ class InscricaoController
         $usuarioId = session('user')['id'];
         $atleta = (new Atleta())->where('usuario_id', '=', $usuarioId)->first();
 
-        if (!$atleta) {
-            return Response::makeJson(['status' => 'error', 'message' => 'Atleta não encontrado.'], 404);
-        }
-
         $inscricao = (new Inscricao())->find($id);
 
         if (!$inscricao || $inscricao->atleta_id !== $atleta->id) {
-            return Response::makeJson(['status' => 'error', 'message' => 'Inscrição não encontrada ou não pertence a você.'], 403);
+            return Response::makeJson(['status' => 'error', 'message' => 'Não autorizado.'], 403);
         }
 
-        // Se já tiver resultado, não pode deletar
-        $hasResultado = (new \App\Models\Resultado())->where('inscricao_id', '=', $id)->first();
-        if ($hasResultado) {
-            return Response::makeJson(['status' => 'error', 'message' => 'Não é possível cancelar inscrição de uma prova que já possui nota.'], 403);
+        // Regra: Bloqueia se a competição já saiu de 'aberta' ou se já tem nota
+        $comp = (new Competicao())->find($inscricao->competicao_id);
+        $hasRes = (new \App\Models\Resultado())->where('inscricao_id', '=', $id)->first();
+
+        if ($comp->status !== 'aberta' || $hasRes) {
+             return Response::makeJson(['status' => 'error', 'message' => 'Não é possível cancelar no status atual.'], 403);
         }
 
-        if ($inscricao->delete()) {
-            if (request()->isHtmx()) {
-                return new Response(""); // Retorna vazio pro HTMX remover o elemento
-            }
-            return Response::makeRedirect(route('atleta.inscricoes.me'));
+        $inscricao->delete();
+
+        if (request()->isHtmx()) {
+            return new Response("<script>window.location.reload();</script>");
         }
 
-        return Response::makeJson(['status' => 'error', 'message' => 'Erro ao cancelar inscrição.'], 500);
+        return Response::makeRedirect('/atleta/dashboard');
     }
 }

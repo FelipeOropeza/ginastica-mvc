@@ -404,10 +404,17 @@ class QueryBuilder
         $first = $models[0];
 
         foreach ($this->with as $key => $value) {
-            $relationMethod = is_string($key) ? $key : (is_string($value) ? $value : null);
+            $fullPath = is_string($key) ? $key : (is_string($value) ? $value : null);
             $closure = is_string($key) ? $value : null;
 
-            if (!$relationMethod || !method_exists($first, $relationMethod)) {
+            if (!$fullPath) continue;
+
+            // Suporte a relações aninhadas via ponto: 'atleta.equipe'
+            $parts = explode('.', $fullPath);
+            $relationMethod = $parts[0];
+            $remaining = count($parts) > 1 ? implode('.', array_slice($parts, 1)) : null;
+
+            if (!method_exists($first, $relationMethod)) {
                 continue;
             }
 
@@ -416,86 +423,53 @@ class QueryBuilder
                 continue;
             }
 
-            if ($def->type === 'belongsTo') {
-                $ids = [];
-                foreach ($models as $m) {
-                    $val = $m->{$def->foreignKey};
-                    if ($val !== null && !in_array($val, $ids)) {
-                        $ids[] = $val;
-                    }
+            // Coletar IDs da model atual para buscar as relacionadas
+            $ids = [];
+            $sourceKey = ($def->type === 'belongsTo') ? $def->foreignKey : $def->localKey;
+            $targetKey = ($def->type === 'belongsTo') ? $def->localKey : $def->foreignKey;
+
+            foreach ($models as $m) {
+                $val = $m->{$sourceKey};
+                if ($val !== null && !in_array($val, $ids)) {
+                    $ids[] = $val;
                 }
+            }
 
-                if (empty($ids)) continue;
+            if (empty($ids)) continue;
 
-                $query = (new $def->relatedClass())->whereIn($def->localKey, $ids);
-                if ($closure instanceof \Closure) {
-                    $closure($query);
+            $query = (new $def->relatedClass())->newQuery();
+            $query->whereIn($targetKey, $ids);
+
+            // Se for o último nível do path e houver closure, aplica
+            if (!$remaining && $closure instanceof \Closure) {
+                $closure($query);
+            }
+
+            // Se ainda houver níveis (ex: 'equipe' de 'atleta.equipe'), passa adiante
+            if ($remaining) {
+                $query->with($remaining);
+            }
+
+            $relatedModels = $query->get();
+
+            // Mapeamento dos resultados
+            $dictionary = [];
+            foreach ($relatedModels as $r) {
+                $k = $r->{$targetKey};
+                if ($def->type === 'hasMany') {
+                    $dictionary[$k][] = $r;
+                } else {
+                    $dictionary[$k] = $r;
                 }
-                $relatedModels = $query->get();
+            }
 
-                $dictionary = [];
-                foreach ($relatedModels as $r) {
-                    $keyVal = $r->{$def->localKey};
-                    if ($keyVal !== null) {
-                        $dictionary[$keyVal] = $r;
-                    }
-                }
-
-                foreach ($models as $m) {
-                    $val = $m->{$def->foreignKey};
-                    $m->setRelation($relationMethod, $val !== null ? ($dictionary[$val] ?? null) : null);
-                }
-            } elseif ($def->type === 'hasMany') {
-                $ids = [];
-                foreach ($models as $m) {
-                    $val = $m->{$def->localKey};
-                    if ($val !== null && !in_array($val, $ids)) {
-                        $ids[] = $val;
-                    }
-                }
-
-                if (empty($ids)) continue;
-
-                $query = (new $def->relatedClass())->whereIn($def->foreignKey, $ids);
-                if ($closure instanceof \Closure) {
-                    $closure($query);
-                }
-                $relatedModels = $query->get();
-
-                $dictionary = [];
-                foreach ($relatedModels as $r) {
-                    $dictionary[$r->{$def->foreignKey}][] = $r;
-                }
-
-                foreach ($models as $m) {
-                    $val = $m->{$def->localKey};
+            // Vínculo das relações nos objetos originais
+            foreach ($models as $m) {
+                $val = $m->{$sourceKey};
+                if ($def->type === 'hasMany') {
                     $m->setRelation($relationMethod, $dictionary[$val] ?? []);
-                }
-            } elseif ($def->type === 'hasOne') {
-                $ids = [];
-                foreach ($models as $m) {
-                    $val = $m->{$def->localKey};
-                    if ($val !== null && !in_array($val, $ids)) {
-                        $ids[] = $val;
-                    }
-                }
-
-                if (empty($ids)) continue;
-
-                $query = (new $def->relatedClass())->whereIn($def->foreignKey, $ids);
-                if ($closure instanceof \Closure) {
-                    $closure($query);
-                }
-                $relatedModels = $query->get();
-
-                $dictionary = [];
-                foreach ($relatedModels as $r) {
-                    $dictionary[$r->{$def->foreignKey}] = $r;
-                }
-
-                foreach ($models as $m) {
-                    $val = $m->{$def->localKey};
-                    $m->setRelation($relationMethod, $dictionary[$val] ?? null);
+                } else {
+                    $m->setRelation($relationMethod, $val !== null ? ($dictionary[$val] ?? null) : null);
                 }
             }
         }

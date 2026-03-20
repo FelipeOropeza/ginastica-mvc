@@ -17,4 +17,20 @@ class Usuario extends Model
     {
         return $this->belongsTo(\App\Models\Role::class, 'role_id');
     }
+
+    /**
+     * Relacionamento com o perfil de atleta (se houver).
+     */
+    public function atleta()
+    {
+        return $this->hasOne(\App\Models\Atleta::class, 'usuario_id');
+    }
+
+    /**
+     * Relacionamento com o perfil de treinador (se houver).
+     */
+    public function treinador()
+    {
+        return $this->hasOne(\App\Models\Treinador::class, 'usuario_id');
+    }
 }

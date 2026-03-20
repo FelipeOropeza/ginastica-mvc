@@ -1,17 +1,20 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $title ?? 'Atleta' ?> - GymPodium</title>
-    
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    
+    <script src="https://unpkg.com/htmx.org@2.0.2"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
     <script>
         tailwind.config = {
             theme: {
@@ -38,7 +41,7 @@
             }
         }
     </script>
-    
+
     <style type="text/tailwindcss">
         @layer components {
             .nav-link {
@@ -48,7 +51,7 @@
                 @apply text-white bg-primary-600 shadow-sm;
             }
             .card {
-                @apply bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden;
+                @apply bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden relative;
             }
             .btn {
                 @apply inline-flex items-center justify-center px-4 py-2 rounded-lg font-semibold transition-all duration-200 active:scale-95 text-sm;
@@ -62,7 +65,8 @@
         }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-900 font-sans min-h-screen flex">
+
+<body class="bg-slate-50 text-slate-900 font-sans min-h-screen flex overflow-x-hidden">
 
     <!-- Sidebar -->
     <aside class="w-64 bg-slate-900 hidden md:flex flex-col h-screen sticky top-0 border-r border-slate-800 shrink-0">
@@ -76,7 +80,7 @@
                 </span>
             </a>
         </div>
-        
+
         <nav class="flex-1 px-3 space-y-1 mt-2">
             <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider px-3 mb-2 opacity-50">Atleta</div>
             <a href="<?= route('atleta.dashboard') ?>" class="nav-link <?= str_contains($_SERVER['REQUEST_URI'], 'dashboard') ? 'active' : '' ?>">
@@ -86,13 +90,13 @@
                 <i class="fa-solid fa-user-gear w-4"></i> Meu Perfil
             </a>
             <a href="<?= route('atleta.competicoes.index') ?>" class="nav-link <?= str_contains($_SERVER['REQUEST_URI'], 'competicoes') ? 'active' : '' ?>">
-                <i class="fa-solid fa-calendar-star w-4"></i> Competições Abertas
+                <i class="fa-solid fa-award w-4"></i> Competições
             </a>
-            <a href="<?= route('atleta.inscricoes.me') ?>" class="nav-link <?= str_contains($_SERVER['REQUEST_URI'], 'minhas-inscricoes') ? 'active' : '' ?>">
+            <a href="<?= route('atleta.inscricoes.minhas') ?>" class="nav-link <?= str_contains($_SERVER['REQUEST_URI'], 'minhas-inscricoes') ? 'active' : '' ?>">
                 <i class="fa-solid fa-list-check w-4"></i> Minhas Inscrições
             </a>
         </nav>
-        
+
         <div class="p-4 border-t border-slate-800">
             <?php $sessionUser = session('user'); ?>
             <div class="bg-slate-800/50 rounded-lg p-3 flex items-center gap-3">
@@ -116,10 +120,11 @@
         <header class="bg-white border-b border-slate-200 h-20 sticky top-0 z-30 flex items-center px-8">
             <h1 class="text-xl font-outfit font-bold text-slate-900"><?= $title ?? 'Painel' ?></h1>
         </header>
-        
+
         <main class="p-8 pb-12">
             <?php $this->renderSection('content') ?>
         </main>
     </div>
 </body>
+
 </html>

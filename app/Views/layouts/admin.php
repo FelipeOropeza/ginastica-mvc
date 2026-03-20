@@ -12,6 +12,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://unpkg.com/htmx.org@2.0.2"></script>
+    <script src="https://unpkg.com/alpinejs" defer></script>
     
     <script>
         tailwind.config = {
@@ -87,14 +88,8 @@
             <a href="<?= route('admin.competicoes.index') ?>" class="nav-link <?= str_contains($_SERVER['REQUEST_URI'], 'competicoes') ? 'active' : '' ?>">
                 <i class="fa-solid fa-calendar-check w-4"></i> Competições
             </a>
-            <a href="<?= route('admin.usuarios.index') ?>" class="nav-link <?= (str_contains($_SERVER['REQUEST_URI'], 'usuarios') && !str_contains($_SERVER['REQUEST_URI'], 'role=jurado')) ? 'active' : '' ?>">
+            <a href="<?= route('admin.usuarios.index') ?>" class="nav-link <?= (str_contains($_SERVER['REQUEST_URI'], 'usuarios') || str_contains($_SERVER['REQUEST_URI'], 'atletas')) ? 'active' : '' ?>">
                 <i class="fa-solid fa-users w-4"></i> Usuários
-            </a>
-            <a href="<?= route('admin.atletas.index') ?>" class="nav-link <?= str_contains($_SERVER['REQUEST_URI'], 'atletas') ? 'active' : '' ?>">
-                <i class="fa-solid fa-person-running w-4"></i> Atletas
-            </a>
-            <a href="<?= route('admin.usuarios.index', ['role' => 'jurado']) ?>" class="nav-link <?= str_contains($_SERVER['REQUEST_URI'], 'role=jurado') ? 'active' : '' ?>">
-                <i class="fa-solid fa-gavel w-4"></i> Jurados
             </a>
             
             <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider px-3 mt-6 mb-2 opacity-50">Configurações</div>
