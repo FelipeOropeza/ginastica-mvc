@@ -2,133 +2,141 @@
 
 <?php
 $equipes = [];
+$avaliados = 0;
 foreach ($inscricoes as $ins) {
     if ($ins->atleta->equipe ?? null) {
         $equipes[$ins->atleta->equipe->id] = $ins->atleta->equipe->nome;
     }
+    if ($ins->notaPorJurado) $avaliados++;
 }
 asort($equipes);
+$total = count($inscricoes);
+$pendentes = $total - $avaliados;
 ?>
 
-<div class="flex items-center gap-3 mb-8">
-    <a href="<?= route('juiz.dashboard') ?>" class="w-8 h-8 rounded border border-slate-200 flex items-center justify-center text-slate-400 hover:bg-white hover:text-slate-600 transition-all shadow-sm">
-        <i class="fa-solid fa-arrow-left text-xs"></i>
+<div class="flex items-center gap-4 mb-8">
+    <a href="<?= route('juiz.dashboard') ?>" class="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-primary-600 hover:border-primary-200 transition-all shadow-sm">
+        <i class="fa-solid fa-arrow-left"></i>
     </a>
-    <h2 class="text-2xl font-outfit font-bold text-slate-800 tracking-tight">
-        <?= e($title) ?>
-    </h2>
-    <div class="ml-auto flex items-center gap-3">
+    <div>
+        <h2 class="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Avaliação em Tempo Real</h2>
+        <p class="text-2xl font-outfit font-black text-slate-800 tracking-tight leading-none"><?= e($title) ?></p>
+    </div>
+    
+    <div class="ml-auto hidden md:flex items-center gap-3">
         <div class="text-right">
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">Painel:</p>
-            <p class="text-[11px] font-black text-amber-600 uppercase tracking-tighter leading-none"><?= e(str_replace('nota_', '', $designacao->criterio)) ?></p>
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Seu Painel:</p>
+            <p class="text-[11px] font-black text-primary-600 uppercase tracking-tighter leading-none border-b-2 border-primary-500 pb-0.5">
+                <?= e(str_replace('nota_', '', $designacao->criterio)) ?>
+            </p>
         </div>
     </div>
 </div>
 
 <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
-    <div class="lg:col-span-3 space-y-6">
-        <div class="card bg-slate-100/50 border-none p-4 flex items-center justify-between">
-            <div class="flex items-center gap-4">
-                <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-slate-400 shadow-sm">
-                    <i class="fa-solid fa-person-gymnastics text-base"></i>
+    <div class="lg:col-span-3">
+        <!-- Barra de Progresso e Filtros -->
+        <div class="card p-6 mb-6 bg-white shadow-xl shadow-slate-200/50 border-none relative overflow-hidden">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+                <div class="flex-1">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Progresso da Prova</span>
+                        <span class="text-[10px] font-black text-primary-600 uppercase tracking-widest"><?= $avaliados ?>/<?= $total ?> Avaliados</span>
+                    </div>
+                    <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                        <div class="h-full bg-primary-500 rounded-full transition-all duration-700 ease-out" style="width: <?= $total > 0 ? ($avaliados/$total)*100 : 0 ?>%"></div>
+                    </div>
                 </div>
-                <div>
-                    <h3 class="font-bold text-slate-800 text-sm"><?= e($prova->categoria->nome ?? 'Categoria Geral') ?></h3>
-                    <p class="text-[10px] font-medium text-slate-500 uppercase tracking-widest truncate"><?= e($competicao->nome) ?></p>
-                </div>
-            </div>
-            
-            <div class="flex items-center gap-6 pr-4">
-                <div class="text-center">
-                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Atletas</p>
-                    <p class="text-lg font-outfit font-black text-slate-700 leading-none"><?= count($inscricoes) ?></p>
-                </div>
-                <div class="text-center">
-                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Status</p>
-                    <span class="px-2 py-0.5 rounded <?= $competicao->status === 'em_andamento' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' ?> text-[9px] font-black uppercase tracking-tighter shadow-sm border border-transparent">
-                        <?= e($competicao->status === 'em_andamento' ? 'Ao Vivo' : 'Bloqueado') ?>
-                    </span>
+                
+                <div class="flex items-center gap-4 shrink-0">
+                    <div class="text-center bg-slate-50 px-4 py-2 rounded-xl border border-slate-100 min-w-[80px]">
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-tighter leading-none mb-1">Status</p>
+                        <span class="text-[10px] font-black <?= $competicao->status === 'em_andamento' ? 'text-green-600' : 'text-red-500' ?> uppercase">
+                            <?= $competicao->status === 'em_andamento' ? '● AO VIVO' : 'BLOQUEADO' ?>
+                        </span>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="mb-6 flex flex-wrap gap-4 items-center">
-            <div class="relative flex-1 min-w-[200px]">
+        <div class="flex flex-col md:flex-row gap-4 mb-6">
+            <div class="relative flex-1">
                 <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                <input type="text" id="searchAtleta" placeholder="Buscar atleta pelo nome..." 
-                       class="w-full pl-10 pr-4 py-2.5 rounded-xl border-2 border-slate-100 focus:border-amber-500 outline-none transition-all text-sm shadow-sm bg-white">
+                <input type="text" id="searchAtleta" placeholder="Buscar ginasta..." 
+                       class="w-full pl-11 pr-4 py-3 rounded-2xl border-none bg-white shadow-md focus:ring-2 focus:ring-primary-500/20 outline-none transition-all text-sm font-bold text-slate-700">
             </div>
             
-            <div class="relative min-w-[200px]">
-                <i class="fa-solid fa-filter absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+            <div class="relative min-w-[220px]">
+                <i class="fa-solid fa-filter absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs text-primary-500"></i>
                 <select id="filterEquipe" 
-                        class="w-full pl-10 pr-10 py-2.5 rounded-xl border-2 border-slate-100 focus:border-amber-500 outline-none appearance-none transition-all text-sm shadow-sm bg-white cursor-pointer">
-                    <option value="">Todos os Clubes / Equipes</option>
+                        class="w-full pl-11 pr-10 py-3 rounded-2xl border-none bg-white shadow-md focus:ring-2 focus:ring-primary-500/20 outline-none appearance-none transition-all text-sm font-bold text-slate-700 cursor-pointer">
+                    <option value="">Equipes (Todas)</option>
                     <?php foreach ($equipes as $id => $nome): ?>
                         <option value="<?= e($nome) ?>"><?= e($nome) ?></option>
                     <?php endforeach; ?>
                 </select>
-                <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] pointer-events-none"></i>
+                <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 text-[10px] pointer-events-none"></i>
             </div>
         </div>
 
-        <div class="space-y-4" id="atletas-list">
+        <!-- Lista de Atletas -->
+        <div class="grid grid-cols-1 gap-4" id="atletas-list">
             <?php if (empty($inscricoes)): ?>
-                <div class="card p-12 text-center border-dashed border-2 bg-slate-50/30">
-                    <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4 text-slate-300">
-                        <i class="fa-solid fa-ghost text-2xl"></i>
-                    </div>
-                    <h4 class="text-slate-600 font-bold mb-1">Nenhum atleta inscrito nesta prova</h4>
-                    <p class="text-slate-400 text-xs italic mx-auto max-w-xs">Assim que houver atletas confirmados, eles aparecerão aqui para sua avaliação.</p>
+                <div class="card p-16 text-center border-dashed border-2 bg-slate-50/50">
+                    <i class="fa-solid fa-users-slash text-slate-200 text-4xl mb-4"></i>
+                    <p class="text-slate-400 font-bold uppercase tracking-widest text-sm">Sem atletas para avaliação</p>
                 </div>
             <?php else: ?>
-                <?php foreach ($inscricoes as $ins): ?>
-                    <div class="card p-6 flex flex-col md:flex-row items-center gap-6 group hover:border-amber-400 transition-all border-l-4 border-l-slate-200 atleta-card" 
+                <?php foreach ($inscricoes as $index => $ins): ?>
+                    <div class="card p-5 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 bg-white border-none group athlete-card" 
                          data-equipe="<?= e($ins->atleta->equipe->nome ?? '') ?>"
-                         data-nome="<?= e(mb_strtolower($ins->atleta->nome ?? '')) ?>">
-                        <div class="flex-1 min-w-0">
-                            <div class="flex items-center gap-2 mb-1">
-                                <span class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-black font-outfit text-slate-500 shadow-inner">
-                                    <?= e($ins->ordem_apresentacao ?? 0) ?>
+                         data-nome="<?= e(mb_strtolower($ins->atleta->nome_completo ?? '')) ?>">
+                        <div class="flex flex-col md:flex-row items-center gap-6">
+                            <div class="flex-1 min-w-0 flex items-center gap-4">
+                                <span class="w-8 h-8 rounded-xl bg-slate-50 text-slate-400 flex items-center justify-center text-xs font-black shadow-inner group-hover:bg-primary-50 group-hover:text-primary-600 transition-colors">
+                                    <?= $index + 1 ?>
                                 </span>
-                                <h4 class="font-outfit font-bold text-slate-800 text-lg group-hover:text-amber-600 transition-all truncate atleta-nome">
-                                    <?= e($ins->atleta->nome ?? 'Atleta...') ?>
-                                </h4>
-                            </div>
-                            <p class="text-xs text-slate-500 italic ml-8 leading-none">
-                                <span class="font-bold uppercase text-[10px] not-italic mr-1 opacity-60">Equipe:</span> <?= e($ins->atleta->equipe->nome ?? '...') ?>
-                            </p>
-                        </div>
-
-                        <div class="flex items-center gap-4 w-full md:w-auto shrink-0" id="nota-container-<?= $ins->id ?>">
-                            <?php if ($ins->notaPorJurado): ?>
-                                <div class="flex flex-col items-center gap-1 min-w-[120px]">
-                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Nota Enviada</p>
-                                    <div class="bg-green-50 text-green-700 px-4 py-1.5 rounded-full border border-green-200 flex items-center justify-center font-outfit font-black text-xl shadow-sm">
-                                        <?= number_format($ins->notaPorJurado->valor, 3) ?>
-                                    </div>
-                                    <p class="text-[8px] font-bold text-slate-400 tracking-tighter uppercase"><?= date('H:i:s', strtotime($ins->notaPorJurado->registrado_em)) ?></p>
+                                <div class="min-w-0">
+                                    <h4 class="font-outfit font-black text-slate-800 text-lg leading-tight mb-1"><?= e($ins->atleta->nome_completo ?? 'Sem Nome') ?></h4>
+                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.1em] flex items-center gap-2">
+                                        <i class="fa-solid fa-shield-halved text-slate-300"></i> <?= e($ins->atleta->equipe->nome ?? 'Avulso') ?>
+                                    </p>
                                 </div>
-                            <?php elseif ($competicao->status === 'em_andamento'): ?>
-                                <form hx-post="<?= route('juiz.salvar_nota', ['inscricao_id' => $ins->id]) ?>" 
-                                      hx-target="#msg-<?= $ins->id ?>" 
-                                      hx-swap="innerHTML"
-                                      hx-on::after-request="this.remove()"
-                                      class="flex items-center gap-3 w-full md:w-auto">
-                                    <div class="space-y-1">
-                                        <input name="valor" type="number" step="0.001" min="0" max="25" placeholder="0.000" required autofocus
-                                               class="w-24 px-4 py-2 text-center rounded-lg border-2 border-slate-200 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 font-outfit font-bold text-lg outline-none transition-all placeholder:text-slate-300">
+                            </div>
+
+                            <div class="w-full md:w-auto shrink-0" id="nota-container-<?= $ins->id ?>">
+                                <?php if ($ins->notaPorJurado): ?>
+                                    <div class="bg-primary-50 rounded-2xl px-6 py-3 border border-primary-100 flex items-center gap-4 shadow-inner">
+                                        <div class="text-right">
+                                            <p class="text-[9px] font-black text-primary-400 uppercase tracking-widest leading-none mb-1">Nota Confirmada</p>
+                                            <p class="text-[8px] text-primary-300 font-bold uppercase"><?= date('H:i:s', strtotime($ins->notaPorJurado->registrado_em)) ?></p>
+                                        </div>
+                                        <div class="text-2xl font-outfit font-black text-primary-600">
+                                            <?= number_format($ins->notaPorJurado->valor, 3) ?>
+                                        </div>
                                     </div>
-                                    <button type="submit" class="w-12 h-12 rounded-xl bg-amber-600 text-white hover:bg-amber-700 hover:scale-105 active:scale-95 transition-all shadow-lg shadow-amber-600/20 flex items-center justify-center group/btn">
-                                        <i class="fa-solid fa-paper-plane text-base group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-all"></i>
-                                    </button>
-                                </form>
-                                <div id="msg-<?= $ins->id ?>"></div>
-                            <?php else: ?>
-                                <span class="bg-slate-100 text-slate-400 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest border border-slate-200 shadow-sm cursor-not-allowed grayscale">
-                                    <i class="fa-solid fa-lock mr-1.5 text-[10px]"></i> Bloqueado
-                                </span>
-                            <?php endif; ?>
+                                <?php elseif ($competicao->status === 'em_andamento'): ?>
+                                    <form hx-post="<?= route('juiz.salvar_nota', ['inscricao_id' => $ins->id]) ?>" 
+                                          hx-target="#msg-<?= $ins->id ?>" 
+                                          hx-swap="innerHTML"
+                                          hx-on::after-request="this.classList.add('opacity-50', 'pointer-events-none')"
+                                          class="flex items-center gap-2">
+                                        <div class="relative">
+                                            <input name="valor" type="number" step="0.001" min="0" max="25" placeholder="0.000" required
+                                                   class="w-32 px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all font-outfit font-black text-xl text-center text-slate-800">
+                                            <span class="absolute -top-1.5 left-3 px-2 bg-white text-[8px] font-black text-slate-400 uppercase tracking-widest">Valor</span>
+                                        </div>
+                                        <button type="submit" class="w-12 h-12 bg-primary-600 text-white rounded-2xl shadow-lg shadow-primary-600/20 hover:bg-primary-700 hover:scale-110 active:scale-90 transition-all flex items-center justify-center group/send">
+                                            <i class="fa-solid fa-check text-lg group-hover/send:rotate-12"></i>
+                                        </button>
+                                    </form>
+                                    <div id="msg-<?= $ins->id ?>" class="mt-2 text-center text-[10px] font-bold"></div>
+                                <?php else: ?>
+                                    <div class="px-6 py-3 rounded-2xl bg-slate-100 text-slate-400 text-[10px] font-black uppercase tracking-widest border border-slate-200 grayscale opacity-60">
+                                        <i class="fa-solid fa-lock mr-2"></i> Bloqueado
+                                    </div>
+                                <?php endif; ?>
+                            </div>
                         </div>
                     </div>
                 <?php endforeach; ?>
@@ -136,31 +144,35 @@ asort($equipes);
         </div>
     </div>
 
-    <!-- Sidebar Informativa -->
+    <!-- Sidebar de Comandos -->
     <div class="space-y-6">
-        <div class="card p-6 bg-slate-900 text-white relative overflow-hidden border-none shadow-xl">
-            <h3 class="text-[10px] font-black text-amber-500 uppercase tracking-[0.2em] mb-4">Lembrete Técnico</h3>
-            <div class="space-y-4 relative z-10">
-                <div class="text-xs space-y-2">
-                    <p class="font-bold border-l-2 border-amber-500 pl-3">Painel E (Execução):</p>
-                    <p class="text-slate-400 opacity-80 pl-3 italic">Deduções de faltas técnicas. O valor final deve refletir o desempenho do atleta.</p>
+        <div class="card p-6 bg-slate-900 border-none shadow-2xl relative overflow-hidden group">
+            <h3 class="text-[10px] font-black text-primary-400 uppercase tracking-[0.2em] mb-4">Painel de Instruções</h3>
+            <div class="space-y-5 relative z-10">
+                <div class="p-3 bg-white/5 rounded-xl border border-white/10 hover:border-primary-500/50 transition-colors">
+                    <p class="text-[10px] font-black text-white uppercase tracking-widest mb-1">Critério Atual</p>
+                    <p class="text-xs text-slate-400 italic">Você está avaliando <span class="text-white font-bold"><?= e(str_replace('nota_', 'Nota ', $designacao->criterio)) ?></span>.</p>
                 </div>
-                <div class="text-xs space-y-2">
-                    <p class="font-bold border-l-2 border-amber-600 pl-3">Painel D (Dificuldade):</p>
-                    <p class="text-slate-400 opacity-80 pl-3 italic">Soma do valor das figuras, ligações e requisitos de composição.</p>
+                <div class="p-3 bg-white/5 rounded-xl border border-white/10">
+                    <p class="text-[10px] font-black text-white uppercase tracking-widest mb-1">Cálculo de Prova</p>
+                    <p class="text-xs text-slate-400 italic">Tipo: <span class="text-white font-bold"><?= e(str_replace('_', ' ', $prova->tipo_calculo)) ?></span>.</p>
                 </div>
             </div>
-            <i class="fa-solid fa-award absolute -right-4 -bottom-4 text-7xl text-white/5 opacity-50 -rotate-12"></i>
+            <i class="fa-solid fa-gavel absolute -right-6 -bottom-6 text-8xl text-white/5 -rotate-12 transition-transform duration-700 group-hover:rotate-0"></i>
         </div>
 
-        <div class="card p-6 bg-amber-50 border-amber-200 shadow-sm">
-            <h4 class="text-xs font-bold text-amber-900 uppercase tracking-widest mb-3 flex items-center gap-2">
-                <i class="fa-solid fa-circle-info text-amber-600"></i> Dica do Sistema
-            </h4>
-            <p class="text-[11px] text-amber-800 leading-relaxed font-medium">
-                Pressione <kbd class="px-1.5 py-0.5 rounded bg-white text-xs border border-amber-300 shadow-sm">Enter</kbd> para enviar a nota rapidamente. 
-                O sistema recalcula a nota final do atleta automaticamente assim que o painel for completo.
-            </p>
+        <div class="card p-6 bg-primary-50 border-primary-100 shadow-sm relative overflow-hidden">
+            <div class="flex items-start gap-3 relative z-10">
+                <div class="w-8 h-8 rounded-lg bg-primary-600 text-white flex items-center justify-center shrink-0 shadow-lg shadow-primary-600/30">
+                    <i class="fa-solid fa-keyboard text-xs"></i>
+                </div>
+                <div>
+                    <h4 class="text-[10px] font-black text-primary-900 uppercase tracking-widest mb-1">Atalhos</h4>
+                    <p class="text-[11px] text-primary-700 font-medium leading-relaxed">
+                        Use a tecla <span class="bg-white px-1 border border-primary-300 rounded text-[9px]">TAB</span> para alternar entre ginastas e <span class="bg-white px-1 border border-primary-300 rounded text-[9px]">ENTER</span> para enviar.
+                    </p>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -169,7 +181,7 @@ asort($equipes);
 document.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.getElementById('searchAtleta');
     const equipeFilter = document.getElementById('filterEquipe');
-    const cards = document.querySelectorAll('.atleta-card');
+    const cards = document.querySelectorAll('.athlete-card');
 
     function filterCards() {
         const searchTerm = searchInput.value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -184,10 +196,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (matchesSearch && matchesEquipe) {
                 card.style.display = '';
-                card.classList.add('animate-in');
+                card.style.animation = 'fadeIn 0.4s ease forwards';
             } else {
                 card.style.display = 'none';
-                card.classList.remove('animate-in');
             }
         });
     }
@@ -198,11 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 
 <style>
-.animate-in {
-    animation: slideIn 0.3s ease-out forwards;
-}
-
-@keyframes slideIn {
+@keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
 }

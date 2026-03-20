@@ -15,6 +15,7 @@ class RolesSeeder
             ['nome' => 'operador', 'descricao' => 'Operador — gerencia competições e inscrições'],
             ['nome' => 'jurado',   'descricao' => 'Jurado — avalia atletas e registra notas'],
             ['nome' => 'atleta',   'descricao' => 'Atleta — participa de competições e consulta resultados'],
+            ['nome' => 'treinador','descricao' => 'Treinador — gerencia atletas de sua equipe'],
         ];
 
         $stmt = $pdo->prepare(

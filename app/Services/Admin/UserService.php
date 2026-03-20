@@ -14,14 +14,14 @@ class UserService
      */
     public function getAll(?string $role = null)
     {
-        $query = (new Usuario())->with('role')->select('usuarios.*');
+        $query = (new Usuario())->with(['role', 'atleta.equipe.treinadores', 'treinador.equipe'])->select('usuarios.*');
 
         if ($role) {
             $query->join('roles', 'roles.id = usuarios.role_id')
                   ->where('roles.nome', '=', $role);
         }
 
-        return $query->get();
+        return $query->orderBy('usuarios.nome')->get();
     }
 
     /**
@@ -33,7 +33,7 @@ class UserService
     }
 
     /**
-     * Cria um novo usuário.
+     * Cria um novo usuário e seu perfil técnico associado.
      */
     public function create(UserDTO $dto)
     {
@@ -42,11 +42,13 @@ class UserService
         $usuario->email = $dto->email;
         $usuario->role_id = $dto->role_id;
         $usuario->ativo = (int) $dto->ativo;
-        
-        // Se não informar senha, gera uma padrão 'gym123456'
         $usuario->senha = password_hash($dto->senha ?? 'gym123456', PASSWORD_DEFAULT);
 
-        return $usuario->save();
+        if ($usuario->save()) {
+            $this->syncTechnicalData($usuario, request()->get('technical') ?? []);
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -54,7 +56,12 @@ class UserService
      */
     public function findById(int $id)
     {
-        $usuario = (new Usuario())->with('role')->select('usuarios.*')->where('usuarios.id', $id)->first();
+        $usuario = (new Usuario())
+            ->with(['role', 'atleta.equipe', 'treinador.equipe'])
+            ->select('usuarios.*')
+            ->where('usuarios.id', '=', $id)
+            ->first();
+
         if (!$usuario) {
             throw new HttpException("Usuário não encontrado.", 404);
         }
@@ -63,18 +70,62 @@ class UserService
     }
 
     /**
-     * Atualiza os dados de um usuário (nome, e-mail e papel).
+     * Atualiza os dados de um usuário e sincroniza perfil técnico.
      */
     public function update(int $id, UserDTO $dto)
     {
         $usuario = $this->findById($id);
-
         $usuario->nome = $dto->nome;
         $usuario->email = $dto->email;
         $usuario->role_id = $dto->role_id;
         $usuario->ativo = (int) $dto->ativo;
 
-        return $usuario->save();
+        if ($usuario->save()) {
+            $this->syncTechnicalData($usuario, request()->get('technical') ?? []);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Sincroniza dados de Atleta ou Treinador baseados no papel do usuário.
+     */
+    private function syncTechnicalData(Usuario $usuario, array $technicalData)
+    {
+        $role = (new Role())->find($usuario->role_id);
+        $roleName = $role->nome ?? 'não encontrado';
+
+        logger()->debug("Syncing Technical Data for User ID: {$usuario->id}, Role: {$roleName}");
+        logger()->debug("Technical Data received: " . json_encode($technicalData));
+
+        if (empty($technicalData)) {
+            logger()->debug("Technical Data is empty, skipping.");
+            return;
+        }
+
+        if ($roleName === 'atleta') {
+            $atleta = (new \App\Models\Atleta())->where('usuario_id', '=', $usuario->id)->first() ?? new \App\Models\Atleta();
+            $atleta->usuario_id = $usuario->id;
+            $atleta->nome_completo = $technicalData['nome_completo'] ?? $usuario->nome;
+            $atleta->equipe_id = $technicalData['equipe_id'] ?? null;
+            $atleta->categoria_id = $technicalData['categoria_id'] ?? null;
+            $atleta->cpf = $technicalData['cpf'] ?? null;
+            $atleta->ativo = $usuario->ativo;
+            $saved = $atleta->save();
+            logger()->debug("Atleta save status: " . ($saved ? 'Success' : 'Failed'));
+        } elseif ($roleName === 'treinador') {
+            $treinador = (new \App\Models\Treinador())->where('usuario_id', '=', $usuario->id)->first() ?? new \App\Models\Treinador();
+            $treinador->usuario_id = $usuario->id;
+            $treinador->nome_completo = $technicalData['nome_completo'] ?? $usuario->nome;
+            $treinador->equipe_id = $technicalData['equipe_id'] ?? null;
+            $treinador->cref = $technicalData['cref'] ?? null;
+            $treinador->especialidade = $technicalData['especialidade'] ?? null;
+            $treinador->ativo = $usuario->ativo;
+            $saved = $treinador->save();
+            logger()->debug("Treinador save status: " . ($saved ? 'Success' : 'Failed'));
+        } else {
+            logger()->debug("Role '{$roleName}' is not technically linked to Atleta or Treinador.");
+        }
     }
 
     /**

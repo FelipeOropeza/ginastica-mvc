@@ -19,4 +19,12 @@ class Equipe extends Model
     {
         return $this->hasMany(Atleta::class, 'equipe_id');
     }
+
+    /**
+     * Relacionamento com os treinadores da equipe.
+     */
+    public function treinadores()
+    {
+        return $this->hasMany(Treinador::class, 'equipe_id');
+    }
 }

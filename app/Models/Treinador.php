@@ -6,7 +6,24 @@ use Core\Database\Model;
 
 class Treinador extends Model
 {
-    // A tabela será deduzida automaticamente como nome da classe + s (ex: "Usuarios")
-    // Descomente a linha abaixo para forçar o nome da tabela no BD:
-    // protected $table = 'nome_da_minha_tabela';
+    protected ?string $table = 'treinadores';
+
+    protected array $fillable = [
+        'usuario_id', 
+        'equipe_id', 
+        'nome_completo', 
+        'cref', 
+        'especialidade', 
+        'ativo'
+    ];
+
+    public function usuario()
+    {
+        return $this->belongsTo(Usuario::class, 'usuario_id');
+    }
+
+    public function equipe()
+    {
+        return $this->belongsTo(Equipe::class, 'equipe_id');
+    }
 }

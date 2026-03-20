@@ -1,107 +1,118 @@
 <?php $this->layout('layouts/athlete', ['title' => $title]) ?>
 
+<!-- Alerta de Perfil Incompleto -->
 <?php if ($perfilIncompleto): ?>
     <div class="bg-amber-50 border border-amber-200 rounded-xl p-6 mb-8 flex flex-col md:flex-row items-center gap-6 animate-pulse">
-        <div class="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 shrink-0">
+        <div class="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 shrink-0 shadow-sm">
             <i class="fa-solid fa-address-card text-2xl"></i>
         </div>
         <div class="flex-1 text-center md:text-left">
-            <h3 class="text-amber-900 font-bold text-lg mb-1">Perfil em Análise!</h3>
+            <h3 class="text-amber-900 font-bold text-lg mb-1 font-outfit">Perfil Pendente!</h3>
             <p class="text-amber-700 text-sm leading-relaxed">
-                Para se inscrever em competições, precisamos que você complete seu cadastro com sua data de nascimento, equipe e categoria.
+                Para participar das competições, seu perfil precisa estar completo (Equipe, Categoria e Data de Nasc.).
             </p>
         </div>
-        <a href="<?= route('atleta.profile') ?>" class="btn bg-amber-600 text-white hover:bg-amber-700 shadow-lg shadow-amber-600/20 px-6 py-3 shrink-0">
-            Completar Agora
+        <a href="<?= route('atleta.profile') ?>" class="btn bg-amber-600 text-white hover:bg-amber-700 shadow-lg shadow-amber-600/20 px-6 py-3 shrink-0 rounded-xl font-bold uppercase text-xs tracking-widest">
+            Completar Meu Perfil
         </a>
     </div>
 <?php endif; ?>
 
+<!-- Resumo em Cards -->
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-    <!-- Card Perfil -->
-    <div class="card p-6 bg-gradient-to-br from-primary-600 to-primary-800 text-white border-none relative overflow-hidden">
+    <div class="card p-6 bg-slate-900 text-white border-none relative overflow-hidden shadow-xl">
         <div class="relative z-10">
-            <h3 class="text-xs font-bold uppercase tracking-widest opacity-80 mb-1">Atleta,</h3>
-            <p class="text-2xl font-outfit font-bold mb-4"><?= e(session('user')['nome']) ?></p>
-            <div class="bg-white/20 backdrop-blur-sm rounded-lg p-3 inline-block">
-                <p class="text-[10px] font-bold uppercase tracking-tighter text-white">Status: 
-                    <span class="<?= ($atleta->ativo ?? false) ? 'text-green-300' : 'text-amber-300' ?>">
-                        <?= ($atleta->ativo ?? false) ? 'Regularizado' : 'Aguardando Perfil' ?>
-                    </span>
-                </p>
-            </div>
+            <h3 class="text-[10px] font-black uppercase tracking-[0.2em] text-primary-400 mb-4">Membro Oficial</h3>
+            <p class="text-3xl font-outfit font-black mb-1 truncate leading-none"><?= e(explode(' ', session('user')['nome'])[0]) ?></p>
+            <p class="text-xs text-slate-400 font-medium mb-1"><?= e($atleta->equipe->nome ?? 'Atleta Avulso') ?></p>
+            
+            <?php if (!empty($atleta->equipe->treinadores)): ?>
+                <div class="flex items-center gap-1.5 mb-4 text-emerald-400">
+                    <i class="fa-solid fa-user-tie text-[9px]"></i>
+                    <span class="text-[9px] font-black uppercase tracking-widest">Técnico: <?= e($atleta->equipe->treinadores[0]->nome_completo ?? 'Responsável') ?></span>
+                </div>
+            <?php else: ?>
+                <div class="mb-4"></div>
+            <?php endif; ?>
+
+            <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800 border border-white/5 text-[9px] font-black uppercase tracking-widest">
+                <span class="w-1.5 h-1.5 rounded-full <?= ($atleta->ativo ?? false) ? 'bg-green-500' : 'bg-amber-500' ?>"></span>
+                <?= ($atleta->ativo ?? false) ? 'Ativo' : 'Pendente' ?>
+            </span>
         </div>
-        <i class="fa-solid fa-medal absolute -right-4 -bottom-4 text-7xl text-white/10 -rotate-12"></i>
+        <i class="fa-solid fa-medal absolute -right-4 -bottom-4 text-6xl text-white/5 -rotate-12 translate-y-4"></i>
     </div>
 
-    <!-- Inscrições -->
-    <div class="card p-6 flex flex-col justify-center text-center">
-        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Minhas Provas</p>
-        <p class="text-4xl font-outfit font-black text-slate-800"><?= $totalInscricoes ?></p>
-        <p class="text-[10px] font-bold text-slate-400 mt-2 uppercase tracking-tighter">Inscrições Confirmadas</p>
+    <div class="card p-6 flex flex-col justify-center text-center shadow-sm bg-white border-slate-100">
+        <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 leading-none">Inscrições</p>
+        <p class="text-5xl font-outfit font-black text-slate-800 leading-none"><?= $totalInscricoes ?></p>
+        <div class="mt-4">
+            <a href="<?= route('atleta.inscricoes.minhas') ?>" class="text-[9px] font-black text-slate-400 uppercase tracking-widest hover:text-primary-600 transition-colors">Ver Histórico</a>
+        </div>
     </div>
 
-    <!-- Melhor Nota -->
-    <div class="card p-6 flex flex-col justify-center text-center">
-        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Minha Melhor Nota</p>
-        <p class="text-4xl font-outfit font-black text-slate-800"><?= $melhorNota !== '--' ? number_format($melhorNota, 3) : '--' ?></p>
-        <p class="text-[10px] font-bold text-slate-400 mt-2 uppercase tracking-tighter">Histórico Geral</p>
+    <div class="card p-6 flex flex-col justify-center text-center shadow-sm bg-white border-slate-100">
+        <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 leading-none">Melhor Nota</p>
+        <p class="text-5xl font-outfit font-black text-primary-600 leading-none"><?= $melhorNota !== '--' ? number_format($melhorNota, 3) : '--' ?></p>
+        <div class="mt-4">
+            <p class="text-[9px] font-black text-slate-300 uppercase tracking-widest leading-none">Melhor nota enviada</p>
+        </div>
     </div>
 </div>
 
-<div class="mt-8">
-    <div class="flex items-center justify-between mb-4 px-2">
-        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest">Minhas Atividades Recentes</h3>
-        <a href="<?= route('atleta.dashboard') ?>" class="text-[10px] font-bold text-primary-600 hover:text-primary-700 uppercase tracking-widest">Ver Tudo</a>
+<div class="mt-12">
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h3 class="text-xl font-outfit font-black text-slate-800 tracking-tight leading-none mb-1">Últimas Participações</h3>
+            <p class="text-xs text-slate-400 font-medium">Suas atividades mais recentes no sistema.</p>
+        </div>
+        <a href="<?= route('atleta.inscricoes.minhas') ?>" class="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-primary-600 transition-colors">Ver Tudo <i class="fa-solid fa-arrow-right-long ml-1"></i></a>
     </div>
 
-    <?php if (empty($atividades)): ?>
-        <div class="card p-12 text-center border-dashed border-2 bg-slate-50/30">
-            <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4 text-slate-300">
-                <i class="fa-solid fa-ghost text-2xl"></i>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <?php if (empty($atividades)): ?>
+            <div class="md:col-span-2 card p-12 text-center border-dashed border-2 bg-slate-50/50">
+                <i class="fa-solid fa-clipboard-list text-slate-200 text-3xl mb-3"></i>
+                <p class="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Sem atividades recentes</p>
             </div>
-            <h4 class="text-slate-600 font-bold mb-1">Nada por aqui ainda...</h4>
-            <p class="text-slate-400 text-xs italic mx-auto max-w-xs">Participe de uma competição para ver seu histórico de apresentações e notas aqui.</p>
-        </div>
-    <?php else: ?>
-        <div class="space-y-4">
+        <?php else: ?>
             <?php foreach ($atividades as $ativ): ?>
-                <div class="card p-4 hover:shadow-md transition-all flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 
-                        <?= $ativ->resultado ? 'bg-green-100 text-green-600' : 'bg-primary-100 text-primary-600' ?>">
-                        <i class="fa-solid <?= $ativ->resultado ? 'fa-check-double' : 'fa-clipboard-check' ?> text-lg"></i>
+                <div class="card p-4 hover:shadow-lg transition-all flex items-center gap-5 bg-white border-slate-100 group">
+                    <div class="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-100 text-slate-400 flex items-center justify-center shrink-0 group-hover:bg-primary-50 group-hover:text-primary-600 group-hover:border-primary-100 transition-all duration-300">
+                        <i class="fa-solid <?= $ativ->resultado ? 'fa-award' : 'fa-clipboard-check' ?> text-lg"></i>
                     </div>
                     <div class="flex-1 min-w-0">
-                        <div class="flex items-center justify-between mb-0.5">
-                            <h4 class="font-bold text-slate-800 text-sm truncate"><?= e($ativ->competicao->nome) ?></h4>
-                            <p class="text-[10px] font-bold text-slate-400 tracking-tighter shrink-0"><?= date('d/m/Y', strtotime($ativ->inscrito_em ?? $ativ->created_at)) ?></p>
-                        </div>
-                        <p class="text-xs text-slate-500 lowercase leading-none">
-                            <span class="font-bold uppercase text-[10px]">Aparelho:</span> <?= e(str_replace('_', ' ', $ativ->prova->aparelho)) ?>
+                        <h4 class="font-bold text-slate-800 text-xs truncate mb-0.5 group-hover:text-primary-700 transition-colors uppercase leading-none"><?= e($ativ->competicao->nome) ?></h4>
+                        <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest">
+                            <?= e(str_replace('_', ' ', $ativ->prova->aparelho)) ?>
                         </p>
                     </div>
                     <?php if ($ativ->resultado): ?>
                         <div class="text-right">
-                            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter leading-none mb-1">Nota Final</p>
-                            <p class="text-lg font-outfit font-black text-green-600 leading-none"><?= number_format($ativ->resultado->nota_final, 3) ?></p>
+                            <p class="text-lg font-outfit font-black text-primary-600 leading-none"><?= number_format($ativ->resultado->nota_final, 3) ?></p>
                         </div>
                     <?php else: ?>
-                        <div class="flex items-center gap-2">
-                            <div class="bg-slate-100 px-3 py-1.5 rounded-lg">
-                                <p class="text-[10px] font-black text-slate-500 uppercase tracking-tighter">Inscrito</p>
-                            </div>
-                            <form action="<?= route('atleta.inscricoes.destroy', ['id' => $ativ->id]) ?>" method="POST" 
-                                  onsubmit="return confirm('Tem certeza que deseja cancelar esta inscrição?')" class="m-0">
-                                <?= csrf_field() ?>
-                                <button type="submit" class="w-8 h-8 rounded-lg bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-colors flex items-center justify-center" 
-                                        title="Cancelar Inscrição">
-                                    <i class="fa-solid fa-trash-can text-xs"></i>
-                                </button>
-                            </form>
+                        <div class="px-3 py-1 rounded-lg bg-slate-100 text-[8px] font-black text-slate-500 uppercase tracking-tighter">
+                            Inscrito
                         </div>
                     <?php endif; ?>
                 </div>
             <?php endforeach; ?>
-        </div>
-    <?php endif; ?>
+        <?php endif; ?>
+    </div>
 </div>
+
+<div class="card mt-8 overflow-hidden border-none shadow-xl bg-slate-900 group relative">
+    <div class="px-8 py-10 relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
+        <div class="max-w-md">
+            <h3 class="text-2xl font-outfit font-bold text-white mb-2 tracking-tight">Pronto para o próximo desafio?</h3>
+            <p class="text-slate-400 text-sm font-medium">Acesse o calendário completo para ver todas as competições e garantir sua vaga.</p>
+        </div>
+        <a href="<?= route('atleta.competicoes.index') ?>" class="btn bg-primary-600 text-white hover:bg-primary-700 shadow-xl shadow-primary-600/30 px-10 py-4 rounded-2xl font-black uppercase text-xs tracking-[0.2em] transform transition-all group-hover:scale-105 active:scale-95">
+            Abrir Calendário <i class="fa-solid fa-arrow-right ml-2 opacity-50"></i>
+        </a>
+    </div>
+    <i class="fa-solid fa-trophy absolute -right-6 -bottom-6 text-9xl text-white/5 -rotate-12 transition-transform duration-700 group-hover:rotate-0 pointer-events-none"></i>
+</div>
+
+<div id="modal-container"></div>
