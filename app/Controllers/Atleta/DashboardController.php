@@ -16,7 +16,10 @@ class DashboardController
     {
         $usuarioId = session('user')['id'];
         
-        $atleta = (new Atleta())->where('usuario_id', '=', $usuarioId)->first();
+        $atleta = (new Atleta())
+            ->with(['equipe.treinadores'])
+            ->where('usuario_id', '=', $usuarioId)
+            ->first();
 
         if (!$atleta) {
             return view('atleta/dashboard', [

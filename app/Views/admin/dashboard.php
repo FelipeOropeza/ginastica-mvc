@@ -33,14 +33,14 @@
     <div class="card p-5">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Próximos Eventos</p>
-                <h3 class="text-2xl font-outfit font-bold text-slate-900 mt-1"><?= count($stats['proximas_competicoes']) ?></h3>
+                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Jurados</p>
+                <h3 class="text-2xl font-outfit font-bold text-slate-900 mt-1"><?= $stats['total_jurados'] ?></h3>
             </div>
-            <div class="w-10 h-10 bg-amber-50 text-amber-600 rounded-lg flex items-center justify-center text-lg">
-                <i class="fa-solid fa-calendar-days"></i>
+            <div class="w-10 h-10 bg-purple-50 text-purple-600 rounded-lg flex items-center justify-center text-lg">
+                <i class="fa-solid fa-gavel"></i>
             </div>
         </div>
-        <p class="text-[10px] text-slate-400 mt-4 italic">Aguardando início</p>
+        <p class="text-[10px] text-slate-400 mt-4 italic">Equipe técnica ativa</p>
     </div>
 </div>
 

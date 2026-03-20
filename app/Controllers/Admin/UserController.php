@@ -37,10 +37,14 @@ class UserController
     public function create()
     {
         $roles = $this->service->getRoles();
+        $equipes = (new \App\Models\Equipe())->all();
+        $categorias = (new \App\Models\Categoria())->all();
 
         return view('admin/usuarios/form', [
             'title' => 'Novo Usuário',
-            'roles' => $roles
+            'roles' => $roles,
+            'equipes' => $equipes,
+            'categorias' => $categorias
         ]);
     }
 
@@ -55,13 +59,16 @@ class UserController
     public function edit(int $id)
     {
         $usuario = $this->service->findById($id);
-
         $roles = $this->service->getRoles();
+        $equipes = (new \App\Models\Equipe())->all();
+        $categorias = (new \App\Models\Categoria())->all();
 
         return view('admin/usuarios/form', [
             'title' => 'Editar Usuário',
             'usuario' => $usuario,
-            'roles' => $roles
+            'roles' => $roles,
+            'equipes' => $equipes,
+            'categorias' => $categorias
         ]);
     }
 
