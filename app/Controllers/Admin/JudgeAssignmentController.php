@@ -46,7 +46,16 @@ class JudgeAssignmentController
     #[Post('/admin/provas/{id}/designacoes/store', name: 'admin.provas.designacoes.store')]
     public function store(int $id, JudgeAssignmentDTO $dto)
     {
-        $this->service->assign($id, $dto);
+        try {
+            $this->service->assign($id, $dto);
+            session()->flash('success', 'Jurado designado com sucesso!');
+        } catch (\Core\Exceptions\HttpException $e) {
+            session()->flash('error', $e->getMessage());
+        } catch (\Core\Exceptions\ValidationException $e) {
+            $error = array_shift($e->errors);
+            if (is_array($error)) $error = array_shift($error);
+            session()->flash('error', $error);
+        }
 
         return Response::makeRedirect("/admin/provas/{$id}/designacoes");
     }

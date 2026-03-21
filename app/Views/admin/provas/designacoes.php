@@ -27,44 +27,67 @@
             <form action="<?= route('admin.provas.designacoes.store', ['id' => $prova->id]) ?>" method="POST" class="space-y-4">
                 <?= csrf_field() ?>
                 
-                <div>
+                <?php 
+                    $hasGeral = false;
+                    foreach($designacoes as $d) if($d->criterio === 'geral') $hasGeral = true;
+                ?>
+
+                <?php if ($hasGeral): ?>
+                    <div class="p-3 bg-amber-50 border border-amber-200 rounded-lg flex gap-3 mb-4">
+                        <i class="fa-solid fa-triangle-exclamation text-amber-500 mt-0.5"></i>
+                        <p class="text-[10px] text-amber-800 font-bold leading-tight">
+                            Esta prova já possui um juiz <span class="uppercase">GERAL</span>. Nenhuma outra designação é permitida.
+                        </p>
+                    </div>
+                <?php endif; ?>
+
+                <div class="<?= $hasGeral ? 'opacity-50 pointer-events-none' : '' ?>">
                     <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Jurado</label>
-                    <select name="usuario_id" class="form-input">
+                    <select name="usuario_id" class="form-input" required>
                         <option value="">Selecione um juiz...</option>
                         <?php foreach ($jurados as $jurado): ?>
                             <option value="<?= $jurado->id ?>"><?= e($jurado->nome) ?></option>
                         <?php endforeach; ?>
                     </select>
-                    <?php if (errors('usuario_id')): ?>
-                        <p class="text-red-500 text-[9px] font-bold mt-1"><?= e(errors('usuario_id')) ?></p>
-                    <?php endif; ?>
                 </div>
 
-                <div>
+                <div class="<?= $hasGeral ? 'opacity-50 pointer-events-none' : '' ?>">
                     <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Critério de Avaliação</label>
-                    <select name="criterio" class="form-input">
+                    <select name="criterio" class="form-input" required>
                         <?php foreach ($criterios as $key => $label): ?>
-                            <option value="<?= $key ?>"><?= $label ?></option>
+                            <option value="<?= $key ?>" <?= $key === 'geral' ? 'class="font-black text-primary-600"' : '' ?>>
+                                <?= $label ?> <?= $key === 'geral' ? '(Banca Única)' : '' ?>
+                            </option>
                         <?php endforeach; ?>
                     </select>
-                    <?php if (errors('criterio')): ?>
-                        <p class="text-red-500 text-[9px] font-bold mt-1"><?= e(errors('criterio')) ?></p>
-                    <?php endif; ?>
+                    <p class="text-[9px] text-slate-400 mt-1 italic">
+                        * Selecione 'Geral' se apenas um juiz for avaliar Nota D + E.
+                    </p>
                 </div>
 
                 <div class="pt-2">
-                    <button type="submit" class="btn btn-primary w-full shadow-lg shadow-primary-500/20">
+                    <button type="submit" class="btn btn-primary w-full shadow-lg shadow-primary-500/20" <?= $hasGeral ? 'disabled' : '' ?>>
                         Designar Juiz
                     </button>
                 </div>
             </form>
         </div>
 
-        <div class="mt-4 p-4 bg-blue-50/50 rounded-xl border border-blue-100 flex gap-3">
-            <i class="fa-solid fa-circle-info text-blue-400 mt-0.5 text-sm"></i>
-            <p class="text-[10px] text-blue-700 leading-relaxed font-medium">
-                Os jurados designados terão acesso à prova em seus painéis para realizar as avaliações em tempo real.
-            </p>
+        <div class="mt-4 p-4 bg-slate-50 rounded-xl border border-slate-200 flex flex-col gap-3">
+            <div class="flex gap-3">
+                <i class="fa-solid fa-circle-info text-primary-500 mt-0.5 text-sm"></i>
+                <h4 class="text-[11px] font-black uppercase tracking-widest text-slate-700">Regras de Banca</h4>
+            </div>
+            <ul class="space-y-2">
+                <li class="flex gap-2 text-[10px] text-slate-600">
+                    <i class="fa-solid fa-check-circle text-emerald-500 mt-0.5"></i>
+                    <span><strong>Nota D/E:</strong> Use para bancas técnicas separadas (Padrão FIG).</span>
+                </li>
+                <li class="flex gap-2 text-[10px] text-slate-600">
+                    <i class="fa-solid fa-circle-exclamation text-amber-500 mt-0.5"></i>
+                    <span><strong>Geral:</strong> Se escolher Geral, este juiz dará a nota final sozinho.</span>
+                </li>
+            </ul>
         </div>
     </div>
 

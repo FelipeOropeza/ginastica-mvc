@@ -76,8 +76,35 @@ class CompetitionController
             if (request()->isHtmx()) {
                 $error = array_shift($e->errors);
                 if (is_array($error)) $error = array_shift($error);
-                return new Response("<span class='text-[9px] text-red-600 font-bold uppercase block max-w-[150px] leading-tight'>{$error}</span>", 200);
-                // Usamos 200 pro HTMX renderizar, mas com cor de erro.
+                
+                // Retornamos o status original (re-renderizamos o badge antigo)
+                // ou apenas enviamos um trigger para o Toast
+                $competicaoOriginal = $this->service->findById($id);
+                
+                header('HX-Trigger: {"showAlert": {"type": "error", "message": "' . $error . '"}}');
+                
+                // Retornamos o badge original para "resetar" o estado visual no htmx
+                $statusClasses = [
+                    'rascunho' => 'bg-slate-100 text-slate-500 border-slate-200',
+                    'aberta' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                    'em_andamento' => 'bg-blue-50 text-blue-700 border-blue-200',
+                    'encerrada' => 'bg-rose-50 text-rose-700 border-rose-200',
+                ];
+                $statusLabels = [
+                    'rascunho' => 'Rascunho',
+                    'aberta' => 'Inscrições Abertas',
+                    'em_andamento' => 'Ativa',
+                    'encerrada' => 'Finalizada',
+                ];
+                $classe = $statusClasses[$competicaoOriginal->status] ?? 'bg-slate-100 text-slate-600';
+                $label = $statusLabels[$competicaoOriginal->status] ?? $competicaoOriginal->status;
+
+                return new Response("<button @click='open = !open; \$event.stopPropagation()' id='status-badge-{$id}' 
+                    class='px-2 py-1 rounded-lg border text-[9px] uppercase tracking-tighter font-black transition-all hover:brightness-95 flex items-center gap-1.5 shadow-sm {$classe}'>
+                    <span class='w-1.5 h-1.5 rounded-full bg-current opacity-50'></span>
+                    {$label}
+                    <i class='fa-solid fa-chevron-down opacity-30'></i>
+                </button>");
             }
             throw $e;
         }
@@ -85,24 +112,26 @@ class CompetitionController
         if (request()->isHtmx()) {
              // Retornamos apenas o pedaço do status ou a linha inteira para atualizar no front
              // Aqui vou retornar a view parcial do status se eu tivesse uma, mas vou retornar o label formatado
-             $statusClasses = [
-                'rascunho' => 'bg-slate-100 text-slate-600',
-                'aberta' => 'bg-green-50 text-green-700 border border-green-200',
-                'em_andamento' => 'bg-blue-50 text-blue-700 border border-blue-200',
-                'encerrada' => 'bg-red-50 text-red-700 border border-red-200',
-            ];
             $statusLabels = [
                 'rascunho' => 'Rascunho',
-                'aberta' => 'Aberta',
+                'aberta' => 'Inscrições Abertas',
                 'em_andamento' => 'Ativa',
                 'encerrada' => 'Finalizada',
+            ];
+            $statusClasses = [
+                'rascunho' => 'bg-slate-100 text-slate-500 border-slate-200',
+                'aberta' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                'em_andamento' => 'bg-blue-50 text-blue-700 border-blue-200',
+                'encerrada' => 'bg-rose-50 text-rose-700 border-rose-200',
             ];
             $classe = $statusClasses[$status] ?? 'bg-slate-100 text-slate-600';
             $label = $statusLabels[$status] ?? $status;
 
-            return new Response("<button @click='open = !open; \$event.stopPropagation()' id='status-badge-{$id}' class='px-2 py-0.5 rounded text-[9px] uppercase tracking-tighter font-bold transition-all hover:brightness-95 {$classe}'>
+            return new Response("<button @click='open = !open; \$event.stopPropagation()' id='status-badge-{$id}' 
+                class='px-2 py-1 rounded-lg border text-[9px] uppercase tracking-tighter font-black transition-all hover:brightness-95 flex items-center gap-1.5 shadow-sm {$classe}'>
+                <span class='w-1.5 h-1.5 rounded-full bg-current opacity-50'></span>
                 {$label}
-                <i class='fa-solid fa-chevron-down ml-1 opacity-50'></i>
+                <i class='fa-solid fa-chevron-down opacity-30'></i>
             </button>");
         }
 

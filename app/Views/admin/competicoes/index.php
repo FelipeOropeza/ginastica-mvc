@@ -11,7 +11,7 @@
 </div>
 
 <div class="card">
-    <div class="overflow-x-auto">
+    <div class="overflow-x-auto md:overflow-visible min-h-[400px]">
         <table class="w-full text-left border-collapse">
             <thead>
                 <tr class="bg-slate-50 border-b border-slate-200">
@@ -57,25 +57,37 @@
                                 <div class="relative inline-block" x-data="{ open: false }">
                                     <?php 
                                         $statusClasses = [
-                                            'rascunho' => 'bg-slate-100 text-slate-600',
-                                            'aberta' => 'bg-green-50 text-green-700 border border-green-200',
-                                            'em_andamento' => 'bg-blue-50 text-blue-700 border border-blue-200',
-                                            'encerrada' => 'bg-red-50 text-red-700 border border-red-200',
+                                            'rascunho' => 'bg-slate-100 text-slate-500 border-slate-200',
+                                            'aberta' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                                            'em_andamento' => 'bg-blue-50 text-blue-700 border-blue-200',
+                                            'encerrada' => 'bg-rose-50 text-rose-700 border-rose-200',
                                         ];
                                         $statusLabels = [
                                             'rascunho' => 'Rascunho',
-                                            'aberta' => 'Aberta',
+                                            'aberta' => 'Inscrições Abertas',
                                             'em_andamento' => 'Ativa',
                                             'encerrada' => 'Finalizada',
                                         ];
                                         $classe = $statusClasses[$comp->status] ?? 'bg-slate-100 text-slate-600';
                                     ?>
-                                    <button @click="open = !open; $event.stopPropagation()" id="status-badge-<?= $comp->id ?>" class="px-2 py-0.5 rounded text-[9px] uppercase tracking-tighter font-bold transition-all hover:brightness-95 <?= $classe ?>">
+                                    <button @click="open = !open; $event.stopPropagation()" id="status-badge-<?= $comp->id ?>" 
+                                            class="px-2 py-1 rounded-lg border text-[9px] uppercase tracking-tighter font-black transition-all hover:brightness-95 flex items-center gap-1.5 shadow-sm <?= $classe ?>">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-current opacity-50"></span>
                                         <?= $statusLabels[$comp->status] ?? e($comp->status) ?>
-                                        <i class="fa-solid fa-chevron-down ml-1 opacity-50"></i>
+                                        <i class="fa-solid fa-chevron-down opacity-30"></i>
                                     </button>
 
-                                    <div x-show="open" @click.away="open = false" class="absolute left-0 mt-1 w-40 bg-white rounded-lg shadow-xl border border-slate-100 z-50 py-1" style="display: none;">
+                                    <!-- Status Dropdown -->
+                                    <div x-show="open" 
+                                         x-transition:enter="transition ease-out duration-100"
+                                         x-transition:enter-start="opacity-0 scale-95"
+                                         x-transition:enter-end="opacity-100 scale-100"
+                                         @click.away="open = false" 
+                                         class="absolute left-0 mt-2 w-48 bg-white rounded-xl shadow-2xl border border-slate-100 z-[100] py-2 overflow-hidden" 
+                                         style="display: none;">
+                                        <div class="px-3 pb-2 mb-1 border-b border-slate-50">
+                                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Alterar Status</p>
+                                        </div>
                                         <?php foreach($statusLabels as $val => $label): ?>
                                             <button 
                                                 hx-post="<?= route('admin.competicoes.status', ['id' => $comp->id]) ?>"
@@ -84,11 +96,11 @@
                                                 hx-target="#status-badge-<?= $comp->id ?>"
                                                 hx-swap="outerHTML"
                                                 @click="open = false"
-                                                class="w-full text-left px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-600 hover:bg-slate-50 hover:text-primary-600 transition-all flex items-center justify-between"
+                                                class="w-full text-left px-4 py-2 text-[10px] font-bold uppercase tracking-widest transition-all flex items-center justify-between <?= $comp->status === $val ? 'text-primary-600 bg-primary-50/50' : 'text-slate-600 hover:bg-slate-50 hover:text-primary-600' ?>"
                                             >
                                                 <?= $label ?>
                                                 <?php if($comp->status === $val): ?>
-                                                    <i class="fa-solid fa-check text-primary-500"></i>
+                                                    <i class="fa-solid fa-circle-check text-xs"></i>
                                                 <?php endif; ?>
                                             </button>
                                         <?php endforeach; ?>

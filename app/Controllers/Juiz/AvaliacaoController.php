@@ -86,7 +86,11 @@ class AvaliacaoController
     public function salvarNota(int $inscricao_id)
     {
         $juradoId = session('user')['id'];
-        $valor = (float) request()->get('valor');
+        $rawValor = request()->get('valor');
+        // Normaliza vírgula para ponto e limpa espaços
+        $normalizedValor = str_replace(',', '.', trim((string)$rawValor));
+        $valor = (float) $normalizedValor;
+        
         $observacao = request()->get('observacao');
 
         try {

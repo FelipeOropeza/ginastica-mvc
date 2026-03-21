@@ -119,18 +119,43 @@ $pendentes = $total - $avaliados;
                                     <form hx-post="<?= route('juiz.salvar_nota', ['inscricao_id' => $ins->id]) ?>" 
                                           hx-target="#msg-<?= $ins->id ?>" 
                                           hx-swap="innerHTML"
-                                          hx-on::after-request="this.classList.add('opacity-50', 'pointer-events-none')"
+                                          hx-on::after-request="this.classList.add('opacity-50', 'pointer-events-none'); this.querySelectorAll('input').forEach(i => i.disabled = true)"
                                           class="flex items-center gap-2">
-                                        <div class="relative">
-                                            <input name="valor" type="number" step="0.001" min="0" max="25" placeholder="0.000" required
-                                                   class="w-32 px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all font-outfit font-black text-xl text-center text-slate-800">
-                                            <span class="absolute -top-1.5 left-3 px-2 bg-white text-[8px] font-black text-slate-400 uppercase tracking-widest">Valor</span>
+                                        <?php 
+                                            $label = 'Nota';
+                                            $criterio = $designacao->criterio ?? 'geral';
+                                            $max = 10;
+                                            $hint = '0 a 10.0';
+                                            
+                                            if ($criterio === 'nota_d') {
+                                                $label = 'Nota D';
+                                                $max = 15;
+                                                $hint = '0 a 15.0';
+                                            } elseif ($criterio === 'nota_e') {
+                                                $label = 'Nota E';
+                                                $max = 10;
+                                                $hint = '0 a 10.0';
+                                            } elseif ($criterio === 'geral') {
+                                                $label = 'Nota Geral';
+                                                $max = 20;
+                                                $hint = '0 a 20.0';
+                                            }
+                                        ?>
+                                        <div class="flex flex-col items-center gap-1">
+                                            <div class="flex items-center gap-2">
+                                                <div class="relative">
+                                                    <input name="valor" type="number" step="0.001" min="0" max="<?= $max ?>" placeholder="0.000" required
+                                                           class="w-32 px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all font-outfit font-black text-xl text-center text-slate-800">
+                                                    <span class="absolute -top-1.5 left-3 px-2 bg-white text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none"><?= $label ?></span>
+                                                </div>
+                                                <button type="submit" class="w-12 h-12 bg-primary-600 text-white rounded-2xl shadow-lg shadow-primary-600/20 hover:bg-primary-700 hover:scale-110 active:scale-90 transition-all flex items-center justify-center group/send">
+                                                    <i class="fa-solid fa-check text-lg group-hover/send:rotate-12"></i>
+                                                </button>
+                                            </div>
+                                            <span class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter italic">Sugerido: <?= $hint ?></span>
                                         </div>
-                                        <button type="submit" class="w-12 h-12 bg-primary-600 text-white rounded-2xl shadow-lg shadow-primary-600/20 hover:bg-primary-700 hover:scale-110 active:scale-90 transition-all flex items-center justify-center group/send">
-                                            <i class="fa-solid fa-check text-lg group-hover/send:rotate-12"></i>
-                                        </button>
                                     </form>
-                                    <div id="msg-<?= $ins->id ?>" class="mt-2 text-center text-[10px] font-bold"></div>
+                                    <div id="msg-<?= $ins->id ?>" class="mt-1 text-center text-[10px] font-bold"></div>
                                 <?php else: ?>
                                     <div class="px-6 py-3 rounded-2xl bg-slate-100 text-slate-400 text-[10px] font-black uppercase tracking-widest border border-slate-200 grayscale opacity-60">
                                         <i class="fa-solid fa-lock mr-2"></i> Bloqueado
