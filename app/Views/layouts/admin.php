@@ -51,7 +51,7 @@
                 @apply text-white bg-primary-600 shadow-sm;
             }
             .card {
-                @apply bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden;
+                @apply bg-white rounded-xl border border-slate-200 shadow-sm;
             }
             .btn {
                 @apply inline-flex items-center justify-center px-4 py-2 rounded-lg font-semibold transition-all duration-200 active:scale-95 text-sm;
@@ -139,17 +139,59 @@
     <div id="alerts" class="fixed top-4 right-4 z-50 flex flex-col gap-2"></div>
 
     <script>
+        // Função global para mostrar alertas
+        function showToast(message, type = 'error') {
+            if (!message) return;
+            const alerts = document.getElementById('alerts');
+            if (!alerts) return;
+            const alert = document.createElement('div');
+            
+            const bgColor = type === 'error' ? 'bg-rose-600' : 'bg-emerald-600';
+            const icon = type === 'error' ? 'fa-circle-exclamation' : 'fa-circle-check';
+            
+            alert.className = `${bgColor} text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 animate-all transform transition-all duration-300 translate-x-12 opacity-0`;
+            alert.innerHTML = `
+                <i class="fa-solid ${icon} text-lg"></i>
+                <div>
+                    <p class="text-[10px] font-black uppercase tracking-widest opacity-70">${type === 'error' ? 'Erro de Validação' : 'Sucesso'}</p>
+                    <p class="text-sm font-bold leading-tight">${message}</p>
+                </div>
+            `;
+            
+            alerts.appendChild(alert);
+            
+            // Entrada
+            setTimeout(() => {
+                alert.classList.remove('translate-x-12', 'opacity-0');
+            }, 10);
+            
+            // Saída
+            setTimeout(() => {
+                alert.classList.add('translate-x-12', 'opacity-20');
+                setTimeout(() => alert.remove(), 300);
+            }, 5000);
+        }
+
+        // Listener para triggers do HTMX
+        document.body.addEventListener('showAlert', function(evt) {
+            showToast(evt.detail.message, evt.detail.type);
+        });
+
+        // Fallback para erros genéricos do HTMX (500, etc)
         document.body.addEventListener('htmx:afterRequest', function(evt) {
-            if (evt.detail.xhr.status === 200 || evt.detail.xhr.status === 201) {
-                // Success feedback if needed
-            } else if (evt.detail.xhr.status >= 400) {
-                // Error feedback
-                const alert = document.createElement('div');
-                alert.className = 'bg-red-500 text-white px-6 py-3 rounded-2xl shadow-xl animate-bounce flex items-center gap-3';
-                alert.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> Ops! Ocorreu um erro.`;
-                document.getElementById('alerts').appendChild(alert);
-                setTimeout(() => alert.remove(), 3000);
+            if (evt.detail.xhr.status >= 400 && evt.detail.xhr.status !== 422) {
+                showToast("Ocorreu um erro inesperado no servidor.", "error");
             }
+        });
+
+        // Alertas de Sessão (Mensagens Flash)
+        document.addEventListener('DOMContentLoaded', () => {
+            <?php if ($msg = session()->get('success')): ?>
+                showToast("<?= e($msg) ?>", "success");
+            <?php endif; ?>
+            <?php if ($msg = session()->get('error')): ?>
+                showToast("<?= e($msg) ?>", "error");
+            <?php endif; ?>
         });
     </script>
 </body>
