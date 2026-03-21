@@ -40,15 +40,24 @@ class JudgeAssignmentService
      */
     public function assign(int $provaId, JudgeAssignmentDTO $dto)
     {
-        // Verifica se já existe a mesma designação (mesmo jurado, mesma prova, mesmo critério)
-        $exists = (new JuradoDesignacao())
-            ->where('prova_id', $provaId)
-            ->where('usuario_id', $dto->usuario_id)
-            ->where('criterio', $dto->criterio)
-            ->first();
+        // 1. Busca todas as designações atuais da prova para validação de regras de negócio
+        $designacoesAtuais = (new JuradoDesignacao())->where('prova_id', $provaId)->get();
 
-        if ($exists) {
-            throw new HttpException("Este jurado já está designado para este critério nesta prova.", 422);
+        // 2. Se o novo critério for 'geral', não pode haver NENHUM outro juiz já designado
+        if ($dto->criterio === 'geral' && !empty($designacoesAtuais)) {
+            throw new HttpException("Uma prova com juiz 'Geral' não pode ter outros juízes designados. Remova os atuais primeiro.", 422);
+        }
+
+        // 3. Se já existe um juiz 'geral', não pode adicionar mais ninguém
+        foreach ($designacoesAtuais as $desig) {
+            if ($desig->criterio === 'geral') {
+                throw new HttpException("Esta prova já possui um juiz 'Geral'. Nenhuma outra designação é permitida.", 422);
+            }
+            
+            // Verifica se o mesmo jurado já está na mesma posição
+            if ($desig->usuario_id == $dto->usuario_id && $desig->criterio == $dto->criterio) {
+                throw new HttpException("Este jurado já está designado para este critério nesta prova.", 422);
+            }
         }
 
         $designacao = new JuradoDesignacao();

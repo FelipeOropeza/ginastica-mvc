@@ -154,44 +154,45 @@ class AvaliacaoService
             }
         }
 
+        // --- CÁLCULO DA BASE ---
         $notaD = !empty($votosD) ? array_sum($votosD) / count($votosD) : 0;
-        
         $notaE = 0;
-        if (!empty($votosE)) {
-            $numVotosE = count($votosE);
-            if ($prova->tipo_calculo === 'nota_d_mais_e' && $numVotosE >= 3) {
-                // Drop extremes for Execução in FIG rules
-                sort($votosE);
-                array_shift($votosE);
-                array_pop($votosE);
-                $notaE = array_sum($votosE) / count($votosE);
-            } else {
-                $notaE = array_sum($votosE) / $numVotosE;
-            }
-        }
+        $notaGeral = 0;
 
-        $notaGeralMedia = 0;
-        if (!empty($votosGeral)) {
-            $numVotosGeral = count($votosGeral);
-            if ($prova->tipo_calculo === 'media_sem_extremos' && $numVotosGeral >= 3) {
+        if ($prova->tipo_calculo === 'media_sem_extremos') {
+            // Regra: Descarta maior e menor antes da média
+            if (!empty($votosE) && count($votosE) >= 3) {
+                sort($votosE);
+                array_shift($votosE); // remove menor
+                array_pop($votosE);   // remove maior
+                $notaE = array_sum($votosE) / count($votosE);
+            } elseif (!empty($votosE)) {
+                $notaE = array_sum($votosE) / count($votosE);
+            }
+
+            if (!empty($votosGeral) && count($votosGeral) >= 3) {
                 sort($votosGeral);
                 array_shift($votosGeral);
                 array_pop($votosGeral);
-                $notaGeralMedia = array_sum($votosGeral) / count($votosGeral);
-            } else {
-                $notaGeralMedia = array_sum($votosGeral) / $numVotosGeral;
+                $notaGeral = array_sum($votosGeral) / count($votosGeral);
+            } elseif (!empty($votosGeral)) {
+                $notaGeral = array_sum($votosGeral) / count($votosGeral);
             }
+        } else {
+            // Média Simples (e fallback para FIG se não houver juízes suficientes para sem extremos)
+            if (!empty($votosE)) $notaE = array_sum($votosE) / count($votosE);
+            if (!empty($votosGeral)) $notaGeral = array_sum($votosGeral) / count($votosGeral);
         }
 
         $totalPenalidades = array_sum($penalidades);
+        $notaFinal = 0;
 
-        if ($prova->tipo_calculo === 'nota_d_mais_e') {
-            $notaFinal = ($notaD + $notaE) - $totalPenalidades;
+        // Se houver votos GERAIS (Juiz único ou banca unificada), eles têm precedência no cálculo final
+        if (!empty($votosGeral)) {
+            $notaFinal = $notaGeral - $totalPenalidades;
         } else {
-            // Se a prova for "media_simples" ou "media_sem_extremos", usa nota geral prioritariamente
-            // Se não houver nota geral, soma D+E como fallback.
-            $base = !empty($votosGeral) ? $notaGeralMedia : ($notaD + $notaE);
-            $notaFinal = $base - $totalPenalidades;
+            // Caso contrário, usamos a soma de D + E (Seja FIG ou Média Simples de D e E)
+            $notaFinal = ($notaD + $notaE) - $totalPenalidades;
         }
 
         $resultado = (new Resultado())->where('inscricao_id', '=', $inscricaoId)->first();
