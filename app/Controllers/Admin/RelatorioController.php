@@ -13,9 +13,7 @@ use Core\Attributes\Route\Middleware;
 #[Middleware(['auth', 'role:admin,operador'])]
 class RelatorioController
 {
-    public function __construct(private RelatorioService $service)
-    {
-    }
+    public function __construct(private RelatorioService $service) {}
 
     #[Get('/admin/relatorios', name: 'admin.relatorios.index')]
     public function index()
@@ -53,8 +51,9 @@ class RelatorioController
         }
 
         $competition = (new \App\Models\Competicao())->find($id);
-        $filename = "relatorio_{$competition->nome}_{$competition->id}.csv";
-        $filename = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $filename);
+        $baseName = "relatorio_{$competition->nome}_{$competition->id}";
+        $baseName = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $baseName);
+        $filename = "{$baseName}.csv";
 
         return new Response($csv, 200, [
             'Content-Type' => 'text/csv; charset=utf-8',
