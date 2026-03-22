@@ -21,7 +21,7 @@ class QueryBuilder
     protected string $selects = '*';
     protected ?int $limit = null;
     protected ?int $offset = null;
-    protected string $orderBy = '';
+    protected array $orderBy = [];
     protected string $groupBy = '';
     protected string $having = '';
     protected array $with = [];
@@ -222,7 +222,7 @@ class QueryBuilder
 
     public function orderBy(string $column, string $direction = 'ASC'): self
     {
-        $this->orderBy = "ORDER BY $column $direction";
+        $this->orderBy[] = "$column $direction";
         return $this;
     }
 
@@ -279,8 +279,8 @@ class QueryBuilder
             $sql .= ' ' . $this->having;
         }
 
-        if ($this->orderBy !== '') {
-            $sql .= ' ' . $this->orderBy;
+        if (!empty($this->orderBy)) {
+            $sql .= ' ORDER BY ' . implode(', ', $this->orderBy);
         }
 
         if ($this->limit !== null) {

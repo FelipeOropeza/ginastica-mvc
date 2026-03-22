@@ -68,6 +68,31 @@ class AvaliacaoService
     }
 
     /**
+     * Identifica o atleta atual que deve ser avaliado na prova de forma sincronizada.
+     * Segue a ordem de apresentação e só avança quando o resultado do anterior estiver 'calculado'.
+     */
+    public function getAtletaAtivo(int $provaId)
+    {
+        $inscricoes = (new Inscricao())
+            ->where('prova_id', '=', $provaId)
+            ->whereIn('status', ['confirmada', 'pendente'])
+            ->orderBy('ordem_apresentacao', 'ASC') // Ordem nula vai pro final no SQL dependendo do Driver, mas preferencialmente ordenamos por ID como fallback
+            ->orderBy('id', 'ASC')
+            ->get();
+
+        foreach ($inscricoes as $ins) {
+            $resultado = (new Resultado())->where('inscricao_id', '=', $ins->id)->first();
+            
+            // Se o resultado não existe ou não está calculado, este é o atleta atual (bloqueando a fila)
+            if (!$resultado || !$resultado->calculado) {
+                return $ins;
+            }
+        }
+
+        return null; // Todos os atletas já foram completamente avaliados
+    }
+
+    /**
      * Registra a nota para um atleta.
      */
     public function registrarNota(int $juradoId, int $inscricaoId, float $valor, ?string $observacao = null)

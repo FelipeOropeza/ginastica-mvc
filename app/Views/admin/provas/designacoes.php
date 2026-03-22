@@ -52,16 +52,16 @@
                 </div>
 
                 <div class="<?= $hasGeral ? 'opacity-50 pointer-events-none' : '' ?>">
-                    <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Critério de Avaliação</label>
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Função na Banca (Atribuição)</label>
                     <select name="criterio" class="form-input" required>
                         <?php foreach ($criterios as $key => $label): ?>
                             <option value="<?= $key ?>" <?= $key === 'geral' ? 'class="font-black text-primary-600"' : '' ?>>
-                                <?= $label ?> <?= $key === 'geral' ? '(Banca Única)' : '' ?>
+                                <?= $label ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
-                    <p class="text-[9px] text-slate-400 mt-1 italic">
-                        * Selecione 'Geral' se apenas um juiz for avaliar Nota D + E.
+                    <p class="text-[9px] text-slate-400 mt-1 italic leading-tight">
+                        * Selecione 'Geral' para Bancas Únicas, Médias Aritméticas ou Olímpicas (onde todos dão a mesma nota).
                     </p>
                 </div>
 
