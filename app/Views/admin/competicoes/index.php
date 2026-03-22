@@ -83,7 +83,7 @@
                                          x-transition:enter-start="opacity-0 scale-95"
                                          x-transition:enter-end="opacity-100 scale-100"
                                          @click.away="open = false" 
-                                         class="absolute left-0 mt-2 w-48 bg-white rounded-xl shadow-2xl border border-slate-100 z-[100] py-2 overflow-hidden" 
+                                         class="absolute right-0 top-full mt-2 w-52 bg-white rounded-2xl shadow-2xl ring-1 ring-black/5 z-[100] py-2 overflow-hidden" 
                                          style="display: none;">
                                         <div class="px-3 pb-2 mb-1 border-b border-slate-50">
                                             <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Alterar Status</p>

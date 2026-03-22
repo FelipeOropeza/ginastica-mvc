@@ -57,4 +57,47 @@ class ProvaController
 
         return Response::makeRedirect("/admin/competicoes/{$compId}/provas");
     }
+
+    #[Get('/admin/provas/{id}/ordem', name: 'admin.provas.ordem')]
+    public function ordem(int $id)
+    {
+        $prova = $this->provaService->findById($id);
+        $competicao = $this->competitionService->findById($prova->competicao_id);
+        $inscricoes = (new \App\Models\Inscricao())
+            ->where('prova_id', '=', $id)
+            ->with(['atleta.equipe'])
+            ->orderBy('ordem_apresentacao', 'ASC')
+            ->orderBy('id', 'ASC')
+            ->get();
+
+        return view('admin/provas/ordem', [
+            'title' => "Ordem: " . str_replace('_', ' ', $prova->aparelho),
+            'prova' => $prova,
+            'competicao' => $competicao,
+            'inscricoes' => $inscricoes
+        ]);
+    }
+
+    #[Post('/admin/provas/{id}/shuffle', name: 'admin.provas.shuffle')]
+    public function shuffle(int $id)
+    {
+        $inscricoes = (new \App\Models\Inscricao())
+            ->where('prova_id', '=', $id)
+            ->whereIn('status', ['confirmada', 'pendente'])
+            ->get();
+
+        if (!empty($inscricoes)) {
+            shuffle($inscricoes);
+            foreach ($inscricoes as $i => $ins) {
+                $ins->ordem_apresentacao = $i + 1;
+                $ins->save();
+            }
+        }
+
+        if (request()->isHtmx()) {
+             return $this->ordem($id);
+        }
+
+        return Response::makeRedirect("/admin/provas/{$id}/ordem");
+    }
 }

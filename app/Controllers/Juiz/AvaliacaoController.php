@@ -62,19 +62,38 @@ class AvaliacaoController
             return Response::makeRedirect('/juiz/dashboard');
         }
 
-        // Buscar atletas inscritos nesta prova
+        // Buscar atleta atual da vez (fila)
+        $atletaAtivo = $this->service->getAtletaAtivo($prova_id);
+        
+        // Buscar todas as inscrições para mostrar o progresso/fila
         $inscricoes = (new Inscricao())
             ->where('prova_id', '=', $prova_id)
+            ->whereIn('status', ['confirmada', 'pendente'])
+            ->orderBy('ordem_apresentacao', 'ASC')
+            ->orderBy('id', 'ASC')
             ->with(['atleta.equipe', 'notaPorJurado' => function($db) use ($juradoId) {
                 return $db->where('jurado_id', '=', $juradoId);
             }])
             ->get();
+
+        // Verificar se este juiz já avaliou o atleta ATIVO
+        $jaAvaliouAtivo = false;
+        if ($atletaAtivo) {
+            foreach ($inscricoes as $ins) {
+                if ($ins->id === $atletaAtivo->id && $ins->notaPorJurado) {
+                    $jaAvaliouAtivo = true;
+                    break;
+                }
+            }
+        }
 
         return view('juiz/avaliar', [
             'title' => 'Avaliação: ' . str_replace('_', ' ', $prova->aparelho),
             'prova' => $prova,
             'competicao' => $prova->competicao,
             'inscricoes' => $inscricoes,
+            'atletaAtivo' => $atletaAtivo,
+            'jaAvaliouAtivo' => $jaAvaliouAtivo,
             'designacao' => $designacao
         ]);
     }
@@ -94,11 +113,12 @@ class AvaliacaoController
         $observacao = request()->get('observacao');
 
         try {
-            $resultado = $this->service->registrarNota($juradoId, $inscricao_id, $valor, $observacao);
+            $this->service->registrarNota($juradoId, $inscricao_id, $valor, $observacao);
             
             if (request()->isHtmx()) {
-                 // Retorna o badge de sucesso pro htmx trocar
-                 return new Response('<span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider animate-bounce"><i class="fa-solid fa-check mr-1"></i> Nota Enviada</span>');
+                 // Ao salvar via HTMX, redirecionamos para recarregar a lógica do "Atleta Ativo"
+                 // ou retornamos a própria view de avaliação que o htmx vai filtrar com hx-select
+                 return $this->avaliar((int) (new \App\Models\Inscricao())->find($inscricao_id)->prova_id);
             }
 
             session()->flash('success', 'Nota registrada com sucesso!');
