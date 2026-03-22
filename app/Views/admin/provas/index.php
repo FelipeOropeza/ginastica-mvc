@@ -134,9 +134,12 @@
                             </div>
                         </div>
 
-                        <div class="mt-4 pt-4 border-t border-slate-50">
-                            <a href="/admin/provas/<?= $prova->id ?>/designacoes" class="text-[11px] font-bold text-primary-600 hover:text-primary-700 flex items-center justify-between group/link">
-                                Designar Jurados <i class="fa-solid fa-arrow-right text-[9px]"></i>
+                        <div class="mt-4 pt-4 border-t border-slate-50 space-y-2">
+                            <a href="/admin/provas/<?= $prova->id ?>/designacoes" class="text-[11px] font-bold text-slate-600 hover:text-primary-600 flex items-center justify-between group/link">
+                                Designar Jurados <i class="fa-solid fa-users text-[9px] opacity-30 group-hover/link:opacity-100 transition-opacity"></i>
+                            </a>
+                            <a href="/admin/provas/<?= $prova->id ?>/ordem" class="text-[11px] font-bold text-primary-600 hover:text-primary-700 flex items-center justify-between group/link">
+                                Sorteio / Fila <i class="fa-solid fa-list-ol text-[9px] group-hover/link:translate-x-0.5 transition-transform"></i>
                             </a>
                         </div>
                     </div>

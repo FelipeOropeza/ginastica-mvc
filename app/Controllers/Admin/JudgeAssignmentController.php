@@ -29,17 +29,26 @@ class JudgeAssignmentController
         $designacoes = $this->service->getDesignacoesByProva($id);
         $jurados = $this->service->getJuradosDisponiveis();
 
+        $criterios = [
+            'nota_d' => 'Banca D (Dificuldade)',
+            'nota_e' => 'Banca E (Execução)',
+            'arbitro_superior' => 'Árbitro Superior / Penalidade',
+            'geral' => 'Banca Única (Geral)'
+        ];
+
+        // Se a prova for de média, mudamos o rótulo para facilitar
+        if ($prova->tipo_calculo === 'media_simples') {
+            $criterios['geral'] = 'Média Aritmética (Geral)';
+        } elseif ($prova->tipo_calculo === 'media_sem_extremos') {
+            $criterios['geral'] = 'Média Olímpica (Geral / Descarte)';
+        }
+
         return view('admin/provas/designacoes', [
             'title' => "Designar Jurados - " . strtoupper($prova->aparelho),
             'prova' => $prova,
             'designacoes' => $designacoes,
             'jurados' => $jurados,
-            'criterios' => [
-                'nota_d' => 'Dificuldade (D)',
-                'nota_e' => 'Execução (E)',
-                'arbitro_superior' => 'Árbitro Superior',
-                'geral' => 'Geral'
-            ]
+            'criterios' => $criterios
         ]);
     }
 
