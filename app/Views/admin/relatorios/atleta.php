@@ -56,65 +56,90 @@
                 <p>Nenhuma inscrição registrada.</p>
             </div>
         <?php else: ?>
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm">
-                    <thead>
-                        <tr class="text-left text-slate-500 border-b border-slate-100">
-                            <th class="pb-3 font-medium">Competição</th>
-                            <th class="pb-3 font-medium">Prova</th>
-                            <th class="pb-3 font-medium">Data</th>
-                            <th class="pb-3 font-medium text-center">Status</th>
-                            <th class="pb-3 font-medium text-center">Class.</th>
-                            <th class="pb-3 font-medium text-center">Nota Final</th>
-                            <th class="pb-3 font-medium text-center">Podio</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-50">
-                        <?php foreach ($atleta->inscricoes as $inscricao): ?>
-                            <?php
-                            $statusClass = match($inscricao->status) {
-                                'confirmada' => 'bg-green-50 text-green-700',
-                                'pendente' => 'bg-yellow-50 text-yellow-700',
-                                'cancelada' => 'bg-red-50 text-red-700',
-                                default => 'bg-slate-100 text-slate-600'
-                            };
-                            $podioIcon = match($inscricao->resultado?->podio) {
-                                'ouro' => '<i class="fa-solid fa-medal text-yellow-500"></i>',
-                                'prata' => '<i class="fa-solid fa-medal text-slate-400"></i>',
-                                'bronze' => '<i class="fa-solid fa-medal text-orange-500"></i>',
-                                default => '-'
-                            };
-                            ?>
-                            <tr class="hover:bg-slate-50">
-                                <td class="py-3">
-                                    <p class="font-medium text-slate-800">
-                                        <?= e($inscricao->competicao?->nome ?? 'N/A') ?>
-                                    </p>
-                                </td>
-                                <td class="py-3 text-slate-600 capitalize">
-                                    <?= str_replace('_', ' ', e($inscricao->prova?->aparelho ?? 'N/A')) ?>
-                                </td>
-                                <td class="py-3 text-slate-600">
-                                    <?= date('d/m/Y', strtotime($inscricao->inscrito_em)) ?>
-                                </td>
-                                <td class="py-3 text-center">
-                                    <span class="px-2 py-1 rounded text-xs font-bold uppercase <?= $statusClass ?>">
-                                        <?= $inscricao->status ?>
-                                    </span>
-                                </td>
-                                <td class="py-3 text-center font-semibold">
-                                    <?= $inscricao->resultado?->classificacao ? $inscricao->resultado->classificacao . 'º' : '-' ?>
-                                </td>
-                                <td class="py-3 text-center font-mono">
-                                    <?= $inscricao->resultado?->nota_final ? number_format($inscricao->resultado->nota_final, 3) : '-' ?>
-                                </td>
-                                <td class="py-3 text-center">
-                                    <?= $podioIcon ?>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
+            <?php
+            $groupedByComp = [];
+            foreach ($atleta->inscricoes as $inscricao) {
+                $compId = $inscricao->competicao->id;
+                if (!isset($groupedByComp[$compId])) {
+                    $groupedByComp[$compId] = [
+                        'competicao' => $inscricao->competicao,
+                        'inscricoes' => []
+                    ];
+                }
+                $groupedByComp[$compId]['inscricoes'][] = $inscricao;
+            }
+            ?>
+
+            <div class="space-y-10">
+                <?php foreach ($groupedByComp as $group): ?>
+                    <?php $comp = $group['competicao']; ?>
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-3">
+                            <span class="w-2 h-2 rounded-full bg-primary-500"></span>
+                            <h3 class="text-sm font-bold text-slate-800 uppercase tracking-tight">
+                                <?= e($comp->nome) ?>
+                                <span class="text-slate-400 font-medium ml-2 text-xs">
+                                    (<?= date('d/m/Y', strtotime($comp->data_inicio)) ?>)
+                                </span>
+                            </h3>
+                        </div>
+
+                        <div class="overflow-x-auto bg-slate-50/50 rounded-xl border border-slate-100 p-1">
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="text-left text-slate-500 border-b border-slate-100">
+                                        <th class="p-3 font-medium">Equipe</th>
+                                        <th class="p-3 font-medium">Prova</th>
+                                        <th class="p-3 font-medium text-center">Status</th>
+                                        <th class="p-3 font-medium text-center">Class.</th>
+                                        <th class="p-3 font-medium text-center">Nota Final</th>
+                                        <th class="p-3 font-medium text-center">Podio</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    <?php foreach ($group['inscricoes'] as $inscricao): ?>
+                                        <?php
+                                        $statusClass = match($inscricao->status) {
+                                            'confirmada' => 'bg-green-50 text-green-700',
+                                            'pendente' => 'bg-yellow-50 text-yellow-700',
+                                            'cancelada' => 'bg-red-50 text-red-700',
+                                            default => 'bg-slate-100 text-slate-600'
+                                        };
+                                        $podioIcon = match($inscricao->resultado?->podio) {
+                                            'ouro' => '<i class="fa-solid fa-medal text-yellow-500 text-base"></i>',
+                                            'prata' => '<i class="fa-solid fa-medal text-slate-400 text-base"></i>',
+                                            'bronze' => '<i class="fa-solid fa-medal text-orange-500 text-base"></i>',
+                                            default => '-'
+                                        };
+                                        ?>
+                                        <tr class="hover:bg-white transition-colors">
+                                            <td class="p-3 text-slate-600">
+                                                <?= e($atleta->equipe->nome ?? '-') ?>
+                                            </td>
+                                            <td class="p-3 text-slate-700 font-bold capitalize">
+                                                <?= str_replace('_', ' ', e($inscricao->prova?->aparelho ?? 'N/A')) ?>
+                                            </td>
+                                            <td class="p-3 text-center">
+                                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase <?= $statusClass ?>">
+                                                    <?= $inscricao->status ?>
+                                                </span>
+                                            </td>
+                                            <td class="p-3 text-center font-bold text-slate-800">
+                                                <?= $inscricao->resultado?->classificacao ? $inscricao->resultado->classificacao . 'º' : '-' ?>
+                                            </td>
+                                            <td class="p-3 text-center font-mono font-bold text-primary-600">
+                                                <?= $inscricao->resultado?->nota_final ? number_format($inscricao->resultado->nota_final, 3) : '-' ?>
+                                            </td>
+                                            <td class="p-3 text-center">
+                                                <?= $podioIcon ?>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
             </div>
         <?php endif; ?>
     </div>

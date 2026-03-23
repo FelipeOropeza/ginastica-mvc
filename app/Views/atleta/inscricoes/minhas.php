@@ -17,83 +17,118 @@
         </a>
     </div>
 <?php else: ?>
-    <div class="space-y-4">
-        <?php foreach ($inscricoes as $ins): ?>
-            <div x-data="{ open: false }" class="space-y-2">
-                <div @click="open = !open" 
-                     class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center gap-6 group hover:border-primary-300 transition-all cursor-pointer select-none">
-                    
-                    <div class="w-12 h-12 rounded-xl bg-slate-50 text-slate-400 flex items-center justify-center shrink-0 border border-slate-100 group-hover:bg-primary-50 group-hover:text-primary-600 transition-colors">
-                        <i class="fa-solid <?= $ins->resultado ? 'fa-award' : 'fa-list-check' ?> text-xl"></i>
-                    </div>
+    <?php
+    $groupedByComp = [];
+    foreach ($inscricoes as $ins) {
+        $compId = $ins->competicao->id;
+        if (!isset($groupedByComp[$compId])) {
+            $groupedByComp[$compId] = [
+                'competicao' => $ins->competicao,
+                'inscricoes' => []
+            ];
+        }
+        $groupedByComp[$compId]['inscricoes'][] = $ins;
+    }
+    ?>
 
-                    <div class="flex-1 min-w-0">
-                        <div class="flex items-center gap-3 mb-1">
-                            <h4 class="font-outfit font-black text-slate-800 text-lg leading-none truncate">
-                                <?= e($ins->competicao->nome) ?>
-                            </h4>
-                            <?php if ($ins->competicao->status === 'encerrada'): ?>
-                                <i class="fa-solid fa-magnifying-glass-chart text-[10px] text-primary-500 animate-pulse"></i>
+    <div class="space-y-12">
+        <?php foreach ($groupedByComp as $group): ?>
+            <?php $comp = $group['competicao']; ?>
+            <div class="space-y-4">
+                <div class="flex items-center gap-4 mb-2">
+                    <div class="h-px bg-slate-200 flex-1"></div>
+                    <div class="flex items-center gap-3 bg-slate-50 px-4 py-2 rounded-full border border-slate-200">
+                        <i class="fa-solid fa-trophy text-primary-500 text-xs"></i>
+                        <h3 class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
+                            <?= e($comp->nome) ?>
+                        </h3>
+                        <span class="text-[10px] text-slate-300 font-medium">
+                            <?= date('d/m/Y', strtotime($comp->data_inicio)) ?>
+                        </span>
+                    </div>
+                    <div class="h-px bg-slate-200 flex-1"></div>
+                </div>
+
+                <div class="grid grid-cols-1 gap-4">
+                    <?php foreach ($group['inscricoes'] as $ins): ?>
+                        <div x-data="{ open: false }" class="space-y-2">
+                            <div @click="open = !open" 
+                                class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center gap-6 group hover:border-primary-300 transition-all cursor-pointer select-none">
+                                
+                                <div class="w-12 h-12 rounded-xl bg-slate-50 text-slate-400 flex items-center justify-center shrink-0 border border-slate-100 group-hover:bg-primary-50 group-hover:text-primary-600 transition-colors">
+                                    <i class="fa-solid <?= $ins->resultado ? 'fa-award' : 'fa-list-check' ?> text-xl"></i>
+                                </div>
+
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-3 mb-1">
+                                        <h4 class="font-outfit font-black text-slate-800 text-lg leading-none truncate capitalize">
+                                            <?= e(str_replace('_', ' ', $ins->prova->aparelho)) ?>
+                                        </h4>
+                                        <?php if ($ins->competicao->status === 'encerrada'): ?>
+                                            <i class="fa-solid fa-magnifying-glass-chart text-[10px] text-primary-500 animate-pulse"></i>
+                                        <?php endif; ?>
+                                    </div>
+                                    
+                                    <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
+                                        <p class="text-slate-500 font-medium flex items-center gap-1.5">
+                                            <span class="font-black uppercase text-[10px] text-slate-400 tracking-tighter mr-1 ml-0.5">Categoria:</span> <?= e($ins->prova->categoria->nome ?? 'N/A') ?>
+                                        </p>
+                                        <p class="text-slate-400 flex items-center gap-1.5 font-medium">
+                                        <span class="text-[10px] uppercase font-black tracking-tighter mr-1">Inscrito em:</span> <?= date('d/m/Y', strtotime($ins->inscrito_em)) ?>
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center gap-6 shrink-0 w-full md:w-auto border-t md:border-t-0 pt-4 md:pt-0">
+                                    <?php if ($ins->resultado): ?>
+                                        <div class="flex items-center gap-4 bg-slate-50 px-5 py-3 rounded-xl border border-slate-100">
+                                            <div class="text-right">
+                                                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Nota Final</p>
+                                                <p class="text-2xl font-outfit font-black text-primary-600 leading-none"><?= number_format($ins->resultado->total ?? $ins->resultado->nota_final, 3) ?></p>
+                                            </div>
+                                        </div>
+                                    <?php else: ?>
+                                        <div class="flex items-center gap-3">
+                                            <div class="bg-amber-50 text-amber-700 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest border border-amber-100 shadow-inner">
+                                                Inscrição Efetuada
+                                            </div>
+                                            
+                                            <?php if ($ins->competicao->status === 'aberta'): ?>
+                                                <form action="<?= route('atleta.inscricoes.destroy', ['id' => $ins->id]) ?>" method="POST" 
+                                                    onsubmit="event.stopPropagation(); return confirm('Tem certeza que deseja cancelar essa participação?')" class="m-0">
+                                                    <?= csrf_field() ?>
+                                                    <button type="submit" class="w-10 h-10 rounded-xl bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-all shadow-sm flex items-center justify-center">
+                                                        <i class="fa-solid fa-trash-can text-sm"></i>
+                                                    </button>
+                                                </form>
+                                            <?php endif; ?>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                            
+                            <?php if ($ins->competicao->status === 'encerrada' && !empty($ins->notas)): ?>
+                                <div x-show="open" x-collapse x-transition 
+                                    class="ml-6 md:ml-14 card p-5 bg-slate-50 border-none shadow-inner border-l-4 border-primary-500 animate-in slide-in-from-top-2 duration-300">
+                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                        <i class="fa-solid fa-chart-simple text-primary-500"></i> Detalhamento da Pontuação (Oficial)
+                                    </p>
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                        <?php foreach($ins->notas as $nota): ?>
+                                            <div class="bg-white p-3 rounded-xl border border-slate-100 flex items-center justify-between shadow-sm">
+                                                <div>
+                                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-tighter leading-none mb-1"><?= str_replace('nota_', '', $nota->criterio) ?></p>
+                                                    <p class="text-[10px] text-slate-500 font-bold truncate max-w-[120px]"><?= e($nota->jurado->nome ?? 'Árbitro') ?></p>
+                                                </div>
+                                                <span class="text-sm font-outfit font-black text-slate-800"><?= number_format($nota->valor, 3) ?></span>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
                             <?php endif; ?>
                         </div>
-                        
-                        <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
-                            <p class="text-slate-500 font-medium flex items-center gap-1.5 lowercase">
-                                <span class="font-black uppercase text-[10px] text-slate-400 tracking-tighter mr-1 ml-0.5">Aparelho:</span> <?= e(str_replace('_', ' ', $ins->prova->aparelho)) ?>
-                            </p>
-                            <p class="text-slate-400 flex items-center gap-1.5 font-medium">
-                               <span class="text-[10px] uppercase font-black tracking-tighter mr-1">Solicitado:</span> <?= date('d/m/Y', strtotime($ins->inscrito_em)) ?>
-                            </p>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center gap-6 shrink-0 w-full md:w-auto border-t md:border-t-0 pt-4 md:pt-0">
-                        <?php if ($ins->resultado): ?>
-                            <div class="flex items-center gap-4 bg-slate-50 px-5 py-3 rounded-xl border border-slate-100">
-                                <div class="text-right">
-                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Nota Final</p>
-                                    <p class="text-2xl font-outfit font-black text-primary-600 leading-none"><?= number_format($ins->resultado->total ?? $ins->resultado->nota_final, 3) ?></p>
-                                </div>
-                            </div>
-                        <?php else: ?>
-                            <div class="flex items-center gap-3">
-                                <div class="bg-amber-50 text-amber-700 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest border border-amber-100 shadow-inner">
-                                    Inscrição Efetuada
-                                </div>
-                                
-                                <?php if ($ins->competicao->status === 'aberta'): ?>
-                                    <form action="<?= route('atleta.inscricoes.destroy', ['id' => $ins->id]) ?>" method="POST" 
-                                          onsubmit="event.stopPropagation(); return confirm('Tem certeza que deseja cancelar essa participação?')" class="m-0">
-                                        <?= csrf_field() ?>
-                                        <button type="submit" class="w-10 h-10 rounded-xl bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-all shadow-sm flex items-center justify-center">
-                                            <i class="fa-solid fa-trash-can text-sm"></i>
-                                        </button>
-                                    </form>
-                                <?php endif; ?>
-                            </div>
-                        <?php endif; ?>
-                    </div>
+                    <?php endforeach; ?>
                 </div>
-                
-                <?php if ($ins->competicao->status === 'encerrada' && !empty($ins->notas)): ?>
-                    <div x-show="open" x-collapse x-transition 
-                         class="ml-6 md:ml-14 card p-5 bg-slate-50 border-none shadow-inner border-l-4 border-primary-500 animate-in slide-in-from-top-2 duration-300">
-                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                            <i class="fa-solid fa-chart-simple text-primary-500"></i> Detalhamento da Puntuação (Oficial)
-                        </p>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                            <?php foreach($ins->notas as $nota): ?>
-                                <div class="bg-white p-3 rounded-xl border border-slate-100 flex items-center justify-between shadow-sm">
-                                    <div>
-                                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-tighter leading-none mb-1"><?= str_replace('nota_', '', $nota->criterio) ?></p>
-                                        <p class="text-[10px] text-slate-500 font-bold truncate max-w-[120px]"><?= e($nota->jurado->nome ?? 'Árbitro') ?></p>
-                                    </div>
-                                    <span class="text-sm font-outfit font-black text-slate-800"><?= number_format($nota->valor, 3) ?></span>
-                                </div>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
-                <?php endif; ?>
             </div>
         <?php endforeach; ?>
     </div>

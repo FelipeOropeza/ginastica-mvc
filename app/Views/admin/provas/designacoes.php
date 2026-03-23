@@ -29,19 +29,23 @@
                 
                 <?php 
                     $hasGeral = false;
-                    foreach($designacoes as $d) if($d->criterio === 'geral') $hasGeral = true;
+                    $hasSplit = false;
+                    foreach ($designacoes as $d) {
+                        if ($d->criterio === 'geral') $hasGeral = true;
+                        if (in_array($d->criterio, ['nota_d', 'nota_e'])) $hasSplit = true;
+                    }
                 ?>
 
-                <?php if ($hasGeral): ?>
+                <?php if ($hasSplit): ?>
                     <div class="p-3 bg-amber-50 border border-amber-200 rounded-lg flex gap-3 mb-4">
                         <i class="fa-solid fa-triangle-exclamation text-amber-500 mt-0.5"></i>
                         <p class="text-[10px] text-amber-800 font-bold leading-tight">
-                            Esta prova já possui um juiz <span class="uppercase">GERAL</span>. Nenhuma outra designação é permitida.
+                            Banca com <span class="uppercase">Nota D e E</span> ativa. Selecione apenas juízes específicos ou remova os atuais para usar banca unificada.
                         </p>
                     </div>
                 <?php endif; ?>
 
-                <div class="<?= $hasGeral ? 'opacity-50 pointer-events-none' : '' ?>">
+                <div class="">
                     <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Jurado</label>
                     <select name="usuario_id" class="form-input" required>
                         <option value="">Selecione um juiz...</option>
@@ -66,7 +70,7 @@
                 </div>
 
                 <div class="pt-2">
-                    <button type="submit" class="btn btn-primary w-full shadow-lg shadow-primary-500/20" <?= $hasGeral ? 'disabled' : '' ?>>
+                    <button type="submit" class="btn btn-primary w-full shadow-lg shadow-primary-500/20">
                         Designar Juiz
                     </button>
                 </div>

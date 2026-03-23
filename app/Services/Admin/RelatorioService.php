@@ -108,21 +108,38 @@ class RelatorioService
 
         foreach ($provas as $prova) {
             $csv[] = ["Prova: {$prova->aparelho}"];
-            $csv[] = ["Classificação", "Atleta", "Equipe", "Nota D", "Nota E", "Penalidade", "Nota Final", "Podio"];
+            
+            if ($prova->tipo_calculo === 'nota_d_mais_e') {
+                $csv[] = ["Classificação", "Atleta", "Equipe", "Nota D", "Nota E", "Penalidade", "Nota Final", "Podio"];
+            } else {
+                $csv[] = ["Classificação", "Atleta", "Equipe", "Média", "Penalidade", "Nota Final", "Podio"];
+            }
 
             $results = $this->getResultsByProva($prova->id);
             
             foreach ($results as $row) {
-                $csv[] = [
-                    $row['classificacao'] ?? '-',
-                    $row['atleta']?->nome_completo ?? '-',
-                    $row['equipe']?->nome ?? '-',
-                    $row['resultado']->nota_d ?? '-',
-                    $row['resultado']->nota_e ?? '-',
-                    $row['resultado']->penalidade ?? '0',
-                    $row['nota_final'] ?? '-',
-                    $row['podio'] ?? '-',
-                ];
+                if ($prova->tipo_calculo === 'nota_d_mais_e') {
+                    $csv[] = [
+                        $row['classificacao'] ?? '-',
+                        $row['atleta']?->nome_completo ?? '-',
+                        $row['equipe']?->nome ?? '-',
+                        $row['resultado']->nota_d ?? '-',
+                        $row['resultado']->nota_e ?? '-',
+                        $row['resultado']->penalidade ?? '0',
+                        $row['nota_final'] ?? '-',
+                        $row['podio'] ?? '-',
+                    ];
+                } else {
+                    $csv[] = [
+                        $row['classificacao'] ?? '-',
+                        $row['atleta']?->nome_completo ?? '-',
+                        $row['equipe']?->nome ?? '-',
+                        $row['resultado']->nota_d ?? '-', // Aqui nota_d já tem a média salva
+                        $row['resultado']->penalidade ?? '0',
+                        $row['nota_final'] ?? '-',
+                        $row['podio'] ?? '-',
+                    ];
+                }
             }
             
             $csv[] = [];
