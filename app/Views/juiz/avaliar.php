@@ -23,6 +23,42 @@ $porcentagem = $total > 0 ? ($avaliados / $total) * 100 : 0;
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     <div class="lg:col-span-2 space-y-6">
         
+        <!-- Header de Informações da Prova -->
+        <div class="card bg-slate-50 border-none shadow-sm p-5 flex flex-wrap items-center justify-between gap-6">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-primary-600 border border-slate-100">
+                    <i class="fa-solid fa-person-gymnastics text-xl"></i>
+                </div>
+                <div>
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] block leading-none mb-1">Aparelho / Prova</span>
+                    <h2 class="text-xl font-outfit font-black text-slate-800 capitalize leading-tight">
+                        <?= str_replace('_', ' ', e($prova->aparelho)) ?>
+                    </h2>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-6">
+                <div>
+                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Sua Função</span>
+                    <span class="px-3 py-1 rounded-lg bg-primary-600 text-white text-[10px] font-black uppercase tracking-widest shadow-md shadow-primary-600/20">
+                        <?= e(str_replace(['nota_', 'geral'], ['Nota ', 'Avaliação Geral'], $designacao->criterio)) ?>
+                    </span>
+                </div>
+                
+                <div class="hidden sm:block">
+                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Sistema</span>
+                    <span class="px-3 py-1 rounded-lg bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest">
+                        <?= $prova->tipo_calculo === 'nota_d_mais_e' ? 'Sistema FIG' : ($prova->tipo_calculo === 'media_sem_extremos' ? 'Média Olímpica' : 'Média Aritmética') ?>
+                    </span>
+                </div>
+
+                <div class="text-right">
+                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Ginastas</span>
+                    <p class="text-lg font-outfit font-black text-slate-800 leading-none"><?= count($inscricoes) ?></p>
+                </div>
+            </div>
+        </div>
+
         <!-- Área Central de Avaliação -->
         <div id="evaluation-center" 
              class="relative min-h-[400px]"
@@ -89,16 +125,25 @@ $porcentagem = $total > 0 ? ($avaliados / $total) * 100 : 0;
                                     
                                     <div class="relative flex-1">
                                         <input name="valor" type="number" step="0.001" min="0" max="<?= $max ?>" placeholder="0.000" autofocus required id="input-nota"
-                                               class="w-full h-full min-h-[100px] px-8 bg-slate-50 border-2 border-slate-100 rounded-3xl focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/5 outline-none transition-all font-outfit font-black text-4xl text-center text-slate-800 placeholder:text-slate-200">
-                                        <label class="absolute -top-3 left-6 px-3 bg-primary-600 text-white text-[10px] font-black uppercase tracking-widest rounded-lg shadow-md leading-loose">
-                                            <?= e(str_replace('nota_', 'Nota ', $designacao->criterio)) ?>
-                                        </label>
+                                               class="w-full h-full min-h-[80px] px-8 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/5 outline-none transition-all font-outfit font-black text-3xl text-center text-slate-800 placeholder:text-slate-200">
+                                        
+                                        <div class="absolute -top-3 left-6 flex gap-2">
+                                            <label class="px-2 bg-primary-600 text-white text-[9px] font-black uppercase tracking-widest rounded-lg shadow-md leading-loose">
+                                                <?= e(str_replace(['nota_', 'geral'], ['Nota ', 'Avaliação Geral'], $designacao->criterio)) ?>
+                                            </label>
+                                            <span class="px-2 bg-slate-800 text-white text-[9px] font-black uppercase tracking-widest rounded-lg shadow-md leading-loose">
+                                                Max: <?= number_format($max, 1) ?>
+                                            </span>
+                                        </div>
+                                        
+                                        <p class="text-center mt-1.5 text-[9px] font-bold text-slate-400 uppercase tracking-widest">Insira o valor final da sua avaliação</p>
                                     </div>
                                     
-                                    <button type="submit" id="btn-submit-nota" class="md:w-48 bg-primary-600 text-white rounded-3xl shadow-xl shadow-primary-600/20 hover:bg-primary-700 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex flex-col items-center justify-center gap-2 py-6 group">
-                                        <i class="fa-solid fa-cloud-arrow-up text-xl group-hover:-translate-y-1 transition-transform group-disabled:hidden"></i>
+                                    <button type="submit" id="btn-submit-nota" class="md:w-48 bg-primary-600 text-white rounded-2xl shadow-lg shadow-primary-600/20 hover:bg-primary-700 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex flex-col items-center justify-center gap-1.5 py-4 group">
+                                        <i class="fa-solid fa-check-to-slot text-xl group-hover:-translate-y-1 transition-transform group-disabled:hidden"></i>
                                         <i class="fa-solid fa-spinner fa-spin hidden group-disabled:block"></i>
-                                        <span class="text-[10px] font-black uppercase tracking-widest">Enviar Nota</span>
+                                        <span class="text-[10px] font-black uppercase tracking-widest">Confirmar Nota</span>
+                                        <span class="text-[8px] font-medium opacity-50">Clique ou Enter</span>
                                     </button>
                                 </form>
                             <?php else: ?>

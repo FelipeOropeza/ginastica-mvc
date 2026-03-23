@@ -31,7 +31,11 @@
                         </td>
                     </tr>
                 <?php else: ?>
-                    <?php foreach ($competicoes as $comp): ?>
+                    <?php 
+                        $total = count($competicoes);
+                        foreach ($competicoes as $index => $comp): 
+                            $isLastRows = ($total > 3 && $index >= $total - 2);
+                    ?>
                         <tr id="comp-<?= $comp->id ?>" class="hover:bg-slate-50 transition-colors">
                             <td class="px-5 py-4">
                                 <div class="flex items-center gap-3">
@@ -83,7 +87,7 @@
                                          x-transition:enter-start="opacity-0 scale-95"
                                          x-transition:enter-end="opacity-100 scale-100"
                                          @click.away="open = false" 
-                                         class="absolute right-0 top-full mt-2 w-52 bg-white rounded-2xl shadow-2xl ring-1 ring-black/5 z-[100] py-2 overflow-hidden" 
+                                         class="absolute right-0 <?= $isLastRows ? 'bottom-full mb-2' : 'top-full mt-2' ?> w-52 bg-white rounded-2xl shadow-2xl ring-1 ring-black/5 z-[100] py-2 overflow-hidden" 
                                          style="display: none;">
                                         <div class="px-3 pb-2 mb-1 border-b border-slate-50">
                                             <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Alterar Status</p>

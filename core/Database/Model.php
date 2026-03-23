@@ -268,7 +268,9 @@ abstract class Model implements \JsonSerializable
         $stmt = $this->db->prepare($sql);
 
         foreach ($data as $key => $value) {
-            $stmt->bindValue(':' . $key, $value);
+            // Conversão explícita para evitar que boolean false vire string vazia ''
+            $val = is_bool($value) ? (int) $value : $value;
+            $stmt->bindValue(':' . $key, $val);
         }
 
         $stmt->execute();
@@ -305,7 +307,9 @@ abstract class Model implements \JsonSerializable
 
         $stmt->bindValue(':__pk_id', $id);
         foreach ($data as $key => $value) {
-            $stmt->bindValue(':' . $key, $value);
+            // Conversão explícita para evitar que boolean false vire string vazia ''
+            $val = is_bool($value) ? (int) $value : $value;
+            $stmt->bindValue(':' . $key, $val);
         }
 
         return $stmt->execute();

@@ -29,18 +29,22 @@ class JudgeAssignmentController
         $designacoes = $this->service->getDesignacoesByProva($id);
         $jurados = $this->service->getJuradosDisponiveis();
 
-        $criterios = [
-            'nota_d' => 'Banca D (Dificuldade)',
-            'nota_e' => 'Banca E (Execução)',
-            'arbitro_superior' => 'Árbitro Superior / Penalidade',
-            'geral' => 'Banca Única (Geral)'
-        ];
-
-        // Se a prova for de média, mudamos o rótulo para facilitar
-        if ($prova->tipo_calculo === 'media_simples') {
-            $criterios['geral'] = 'Média Aritmética (Geral)';
-        } elseif ($prova->tipo_calculo === 'media_sem_extremos') {
-            $criterios['geral'] = 'Média Olímpica (Geral / Descarte)';
+        // Definimos o que cada tipo de prova permite
+        if ($prova->tipo_calculo === 'nota_d_mais_e') {
+            // FIG permite tudo (Nota D, E, Superior, ou Geral p/ solo)
+            $criterios = [
+                'nota_d' => 'Banca D (Dificuldade)',
+                'nota_e' => 'Banca E (Execução)',
+                'arbitro_superior' => 'Árbitro Superior / Penalidade',
+                'geral' => 'Geral (Banca Única)'
+            ];
+        } else {
+            // Provas de MÉDIA não permitem separar D e E, apenas banca unificada
+            $label = ($prova->tipo_calculo === 'media_sem_extremos') ? 'Média Olímpica' : 'Média Aritmética';
+            $criterios = [
+                'geral' => "{$label} (Geral)",
+                'arbitro_superior' => 'Árbitro Superior / Penalidade'
+            ];
         }
 
         return view('admin/provas/designacoes', [

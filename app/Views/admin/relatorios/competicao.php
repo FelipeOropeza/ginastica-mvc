@@ -41,8 +41,11 @@
                         <?= str_replace('_', ' ', e($prova->aparelho)) ?>
                     </h2>
                     <?php if ($prova->categoria): ?>
-                        <p class="text-sm text-slate-500"><?= e($prova->categoria->nome) ?></p>
+                        <p class="text-sm text-slate-500 font-medium"><?= e($prova->categoria->nome) ?></p>
                     <?php endif; ?>
+                    <p class="text-[10px] font-bold text-primary-600 uppercase tracking-widest mt-1">
+                        <?= $prova->tipo_calculo === 'nota_d_mais_e' ? 'Sistema FIG (D+E)' : ($prova->tipo_calculo === 'media_sem_extremos' ? 'Média Olímpica' : 'Média Aritmética') ?>
+                    </p>
                 </div>
                 <div class="text-right">
                     <p class="text-sm text-slate-500">
@@ -77,8 +80,14 @@
                                     <th class="pb-3 font-medium w-16">Class.</th>
                                     <th class="pb-3 font-medium">Atleta</th>
                                     <th class="pb-3 font-medium">Equipe</th>
-                                    <th class="pb-3 font-medium text-center">Nota D</th>
-                                    <th class="pb-3 font-medium text-center">Nota E</th>
+                                    
+                                    <?php if ($prova->tipo_calculo === 'nota_d_mais_e'): ?>
+                                        <th class="pb-3 font-medium text-center">Nota D</th>
+                                        <th class="pb-3 font-medium text-center">Nota E</th>
+                                    <?php else: ?>
+                                        <th class="pb-3 font-medium text-center">Média</th>
+                                    <?php endif; ?>
+
                                     <th class="pb-3 font-medium text-center">Pen.</th>
                                     <th class="pb-3 font-medium text-center">Final</th>
                                 </tr>
@@ -116,12 +125,20 @@
                                         <td class="py-3 text-slate-600">
                                             <?= e($row['equipe']?->nome ?? '-') ?>
                                         </td>
-                                        <td class="py-3 text-center font-mono">
-                                            <?= number_format($row['resultado']->nota_d ?? 0, 3) ?>
-                                        </td>
-                                        <td class="py-3 text-center font-mono">
-                                            <?= number_format($row['resultado']->nota_e ?? 0, 3) ?>
-                                        </td>
+
+                                        <?php if ($prova->tipo_calculo === 'nota_d_mais_e'): ?>
+                                            <td class="py-3 text-center font-mono">
+                                                <?= number_format($row['resultado']->nota_d ?? 0, 3) ?>
+                                            </td>
+                                            <td class="py-3 text-center font-mono">
+                                                <?= number_format($row['resultado']->nota_e ?? 0, 3) ?>
+                                            </td>
+                                        <?php else: ?>
+                                            <td class="py-3 text-center font-mono">
+                                                <?= number_format($row['resultado']->nota_d ?? 0, 3) ?>
+                                            </td>
+                                        <?php endif; ?>
+
                                         <td class="py-3 text-center font-mono text-red-500">
                                             <?= number_format($row['resultado']->penalidade ?? 0, 3) ?>
                                         </td>

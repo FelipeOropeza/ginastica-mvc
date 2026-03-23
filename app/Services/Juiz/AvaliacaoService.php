@@ -226,13 +226,13 @@ class AvaliacaoService
             $resultado->inscricao_id = $inscricaoId;
         }
 
-        $resultado->nota_d = $notaD;
+        $resultado->nota_d = !empty($votosGeral) ? $notaGeral : $notaD;
         $resultado->nota_e = $notaE;
         $resultado->penalidade = $totalPenalidades;
         $resultado->nota_final = max(0, $notaFinal);
 
         $numVotosTotal = count($votosD) + count($votosE) + count($votosGeral);
-        $resultado->calculado = ($numVotosTotal >= ($prova->num_jurados ?? 3));
+        $resultado->calculado = (int) ($numVotosTotal >= ($prova->num_jurados ?? 3));
 
         if ($resultado->save()) {
             Resultado::calcularRanking($inscricao->prova_id);

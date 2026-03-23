@@ -58,8 +58,8 @@ class CompetitionService
         $competicao->local = $dto->local;
         $competicao->descricao = $dto->descricao;
         
-        if (isset($dto->status) && $dto->status === 'aberta' && $competicao->status !== 'aberta') {
-            $this->validateReadiness($competicao);
+        if (isset($dto->status) && in_array($dto->status, ['aberta', 'em_andamento']) && $competicao->status !== $dto->status) {
+            $this->validateReadiness($competicao, $dto->status);
         }
 
         if (isset($dto->status)) {
@@ -72,20 +72,38 @@ class CompetitionService
     }
 
     /**
-     * Valida se a competição está pronta para abrir inscrições.
+     * Valida se a competição está pronta para abrir inscrições ou para ser ativada.
      */
-    protected function validateReadiness(Competicao $competicao): void
+    protected function validateReadiness(Competicao $competicao, string $status): void
     {
         $provas = (new Prova())->where('competicao_id', '=', $competicao->id)->get();
 
         if (empty($provas)) {
-            throw new ValidationException(['status' => 'A competição precisa ter pelo menos uma prova/aparelho cadastrado antes de ser aberta.']);
+            throw new ValidationException(['status' => 'A competição precisa ter pelo menos uma prova/aparelho cadastrado.']);
         }
 
+        // Se estiver tentando ATIVAR a competição (em_andamento)
+        if ($status === 'em_andamento') {
+            $inscricoes = (new \App\Models\Inscricao())
+                ->where('competicao_id', '=', $competicao->id)
+                ->where('status', '=', 'confirmada')
+                ->get();
+
+            if (empty($inscricoes)) {
+                throw new ValidationException(['status' => 'Não é possível ativar uma competição sem atletas inscritos e confirmados.']);
+            }
+
+            foreach ($inscricoes as $ins) {
+                if (empty($ins->ordem_apresentacao)) {
+                    throw new ValidationException(['status' => 'A ordem de apresentação dos atletas ainda não foi gerada para esta competição.']);
+                }
+            }
+        }
+
+        // Valida se as provas têm juízes designados (Necessário para Abrir e para Ativar)
         foreach ($provas as $prova) {
             $required = $prova->num_jurados ?? 0;
             if ($required > 0) {
-                // Aqui poderíamos ter um count() no QueryBuilder, mas vamos usar a relação se disponível ou o modelo
                 $count = (new JuradoDesignacao())->where('prova_id', '=', $prova->id)->count();
                 
                 if ($count < $required) {
@@ -103,8 +121,9 @@ class CompetitionService
     {
         $competicao = $this->findById($id);
 
-        if ($status === 'aberta' && $competicao->status !== 'aberta') {
-            $this->validateReadiness($competicao);
+        // Bloqueia se tentar ir para um status restrito sem validação
+        if (in_array($status, ['aberta', 'em_andamento']) && $competicao->status !== $status) {
+            $this->validateReadiness($competicao, $status);
         }
 
         $competicao->status = $status;
