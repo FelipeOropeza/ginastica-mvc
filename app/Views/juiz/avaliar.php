@@ -7,6 +7,7 @@ foreach ($inscricoes as $ins) {
 }
 $total = count($inscricoes);
 $porcentagem = $total > 0 ? ($avaliados / $total) * 100 : 0;
+$porcentagem = $total > 0 ? ($avaliados / $total) * 100 : 0;
 ?>
 
 <!-- Progress Bar OOB -->
@@ -14,7 +15,14 @@ $porcentagem = $total > 0 ? ($avaliados / $total) * 100 : 0;
     <div class="flex items-center justify-between mb-2">
         <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Progresso da Avaliação</span>
         <span class="text-[10px] font-black text-primary-600 uppercase tracking-widest"><?= $avaliados ?> / <?= $total ?></span>
+<!-- Progress Bar OOB -->
+<div id="progress-container" hx-swap-oob="true" class="card p-4 mb-6 bg-white border-none shadow-sm">
+    <div class="flex items-center justify-between mb-2">
+        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Progresso da Avaliação</span>
+        <span class="text-[10px] font-black text-primary-600 uppercase tracking-widest"><?= $avaliados ?> / <?= $total ?></span>
     </div>
+    <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+        <div class="h-full bg-primary-500 rounded-full transition-all duration-500" style="width: <?= $porcentagem ?>%"></div>
     <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
         <div class="h-full bg-primary-500 rounded-full transition-all duration-500" style="width: <?= $porcentagem ?>%"></div>
     </div>
@@ -205,14 +213,55 @@ $porcentagem = $total > 0 ? ($avaliados / $total) * 100 : 0;
                             </span>
                         <?php endif; ?>
                     </div>
+    <!-- Timeline OOB -->
+    <div class="space-y-4">
+        <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Fila de Apresentação</h3>
+        
+        <div id="atletas-list" hx-swap-oob="true" class="space-y-2">
+            <?php foreach ($inscricoes as $ins): ?>
+                <?php 
+                    $isAtivo = $atletaAtivo && $ins->id === $atletaAtivo->id;
+                    $jaVotou = (bool) $ins->notaPorJurado;
+                ?>
+                <div class="card p-3 border-none transition-all duration-300 <?= $isAtivo ? 'bg-primary-600 text-white shadow-lg -translate-x-2' : ($jaVotou ? 'bg-emerald-50/50 opacity-60' : 'bg-white') ?>">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg flex items-center justify-center text-[11px] font-black <?= $isAtivo ? 'bg-white/20' : ($jaVotou ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-400') ?>">
+                            <?php if ($jaVotou): ?>
+                                <i class="fa-solid fa-check"></i>
+                            <?php else: ?>
+                                <?= $ins->ordem_apresentacao ?: '#' ?>
+                            <?php endif; ?>
+                        </div>
+                        
+                        <div class="flex-1 min-w-0">
+                            <h4 class="font-bold text-xs truncate <?= $isAtivo ? 'text-white' : 'text-slate-800' ?>">
+                                <?= e($ins->atleta->nome_completo) ?>
+                            </h4>
+                            <p class="text-[9px] font-bold uppercase tracking-tight opacity-60">
+                                <?= e($ins->atleta->equipe->nome ?? 'Avulso') ?>
+                            </p>
+                        </div>
+
+                        <?php if ($jaVotou): ?>
+                            <span class="text-[10px] font-black font-outfit <?= $isAtivo ? 'text-white' : 'text-slate-600' ?>">
+                                <?= number_format($ins->notaPorJurado->valor, 3) ?>
+                            </span>
+                        <?php endif; ?>
+                    </div>
                 </div>
+            <?php endforeach; ?>
             <?php endforeach; ?>
         </div>
 
         <div class="card p-4 bg-slate-900 text-white border-none shadow-xl mt-6">
             <div class="flex items-start gap-3">
                 <i class="fa-solid fa-keyboard text-primary-400 mt-0.5"></i>
+        <div class="card p-4 bg-slate-900 text-white border-none shadow-xl mt-6">
+            <div class="flex items-start gap-3">
+                <i class="fa-solid fa-keyboard text-primary-400 mt-0.5"></i>
                 <div>
+                    <h5 class="text-[9px] font-black text-primary-400 uppercase tracking-widest mb-1">Dica de Produtividade</h5>
+                    <p class="text-[11px] text-slate-400 leading-snug">O cursor foca automaticamente no campo de nota. Após digitar, aperte <kbd class="px-1 bg-white/10 rounded text-white inline-block">Enter</kbd> para enviar rápido.</p>
                     <h5 class="text-[9px] font-black text-primary-400 uppercase tracking-widest mb-1">Dica de Produtividade</h5>
                     <p class="text-[11px] text-slate-400 leading-snug">O cursor foca automaticamente no campo de nota. Após digitar, aperte <kbd class="px-1 bg-white/10 rounded text-white inline-block">Enter</kbd> para enviar rápido.</p>
                 </div>
