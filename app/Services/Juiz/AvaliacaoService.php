@@ -13,6 +13,10 @@ use Core\Exceptions\HttpException;
 
 class AvaliacaoService
 {
+    public function __construct(protected \Symfony\Component\Mercure\HubInterface $hub)
+    {
+    }
+
     /**
      * Obtém as competições onde o jurado tem designações.
      */
@@ -95,7 +99,7 @@ class AvaliacaoService
     /**
      * Registra a nota para um atleta.
      */
-    public function registrarNota(int $juradoId, int $inscricaoId, float $valor, ?string $observacao = null)
+    public function registrarNota(int $juradoId, int $inscricaoId, float $valor, ?string $observacao = null, ?string $criterio = null)
     {
         $inscricao = (new Inscricao())->with(['competicao', 'prova'])->where('id', '=', $inscricaoId)->first();
 
@@ -123,22 +127,24 @@ class AvaliacaoService
             throw new HttpException("Você não tem permissão para avaliar esta prova.", 403);
         }
 
+        // Usamos o critério passado ou o da designação
+        $criterioFinal = $criterio ?: $designacao->criterio;
+
         // Impedir nota duplicada para o mesmo jurado/inscrição/critério 
-        // mas as notas podem ser por critério. O jurado só tem um critério por designação.
         $jaAvaliado = (new Nota())
             ->where('inscricao_id', '=', $inscricaoId)
             ->where('jurado_id', '=', $juradoId)
-            ->where('criterio', '=', $designacao->criterio)
+            ->where('criterio', '=', $criterioFinal)
             ->first();
 
         if ($jaAvaliado) {
-            throw new ValidationException(['nota' => "Você já enviou a nota para este atleta nesta categoria."]);
+            throw new ValidationException(['nota' => "Você já enviou a nota para este atleta neste critério ($criterioFinal)."]);
         }
 
         $nota = new Nota();
         $nota->inscricao_id = $inscricaoId;
         $nota->jurado_id = $juradoId;
-        $nota->criterio = $designacao->criterio;
+        $nota->criterio = $criterioFinal;
         $nota->valor = $valor;
         $nota->observacao = $observacao;
         $nota->registrado_em = date('Y-m-d H:i:s');
@@ -236,6 +242,18 @@ class AvaliacaoService
 
         if ($resultado->save()) {
             Resultado::calcularRanking($inscricao->prova_id);
+
+            // Transmitir evento Mercure para o dashboard AO VIVO
+            $update = new \Symfony\Component\Mercure\Update(
+                'competicao-' . $inscricao->competicao_id,
+                json_encode([
+                    'type' => 'score_update',
+                    'prova_id' => $inscricao->prova_id,
+                    'atleta' => $inscricao->atleta->nome_completo ?? 'Atleta',
+                    'nota_final' => number_format($resultado->nota_final, 3)
+                ])
+            );
+            $this->hub->publish($update);
         }
     }
 }

@@ -130,11 +130,15 @@ class RelatorioService
                         $row['podio'] ?? '-',
                     ];
                 } else {
+                    $mediaDisplay = 0;
+                    if (isset($row['resultado'])) {
+                        $mediaDisplay = ($row['resultado']->nota_final ?? 0) + ($row['resultado']->penalidade ?? 0);
+                    }
                     $csv[] = [
                         $row['classificacao'] ?? '-',
                         $row['atleta']?->nome_completo ?? '-',
                         $row['equipe']?->nome ?? '-',
-                        $row['resultado']->nota_d ?? '-', // Aqui nota_d já tem a média salva
+                        $mediaDisplay,
                         $row['resultado']->penalidade ?? '0',
                         $row['nota_final'] ?? '-',
                         $row['podio'] ?? '-',

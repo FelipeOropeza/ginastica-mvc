@@ -135,13 +135,20 @@
                                             </td>
                                         <?php else: ?>
                                             <td class="py-3 text-center font-mono">
-                                                <?= number_format($row['resultado']->nota_d ?? 0, 3) ?>
+                                                <?php 
+                                                    $mediaDisplay = 0;
+                                                    if ($row['resultado']) {
+                                                        $mediaDisplay = ($row['resultado']->nota_final ?? 0) + ($row['resultado']->penalidade ?? 0);
+                                                    }
+                                                ?>
+                                                <?= number_format($mediaDisplay, 3) ?>
                                             </td>
                                         <?php endif; ?>
 
                                         <td class="py-3 text-center font-mono text-red-500">
                                             <?= number_format($row['resultado']->penalidade ?? 0, 3) ?>
                                         </td>
+
                                         <td class="py-3 text-center font-bold font-mono">
                                             <?= number_format($row['resultado']->nota_final ?? 0, 3) ?>
                                         </td>

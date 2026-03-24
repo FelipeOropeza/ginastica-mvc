@@ -7,7 +7,6 @@ foreach ($inscricoes as $ins) {
 }
 $total = count($inscricoes);
 $porcentagem = $total > 0 ? ($avaliados / $total) * 100 : 0;
-$porcentagem = $total > 0 ? ($avaliados / $total) * 100 : 0;
 ?>
 
 <!-- Progress Bar OOB -->
@@ -15,14 +14,7 @@ $porcentagem = $total > 0 ? ($avaliados / $total) * 100 : 0;
     <div class="flex items-center justify-between mb-2">
         <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Progresso da Avaliação</span>
         <span class="text-[10px] font-black text-primary-600 uppercase tracking-widest"><?= $avaliados ?> / <?= $total ?></span>
-<!-- Progress Bar OOB -->
-<div id="progress-container" hx-swap-oob="true" class="card p-4 mb-6 bg-white border-none shadow-sm">
-    <div class="flex items-center justify-between mb-2">
-        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Progresso da Avaliação</span>
-        <span class="text-[10px] font-black text-primary-600 uppercase tracking-widest"><?= $avaliados ?> / <?= $total ?></span>
     </div>
-    <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-        <div class="h-full bg-primary-500 rounded-full transition-all duration-500" style="width: <?= $porcentagem ?>%"></div>
     <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
         <div class="h-full bg-primary-500 rounded-full transition-all duration-500" style="width: <?= $porcentagem ?>%"></div>
     </div>
@@ -49,7 +41,7 @@ $porcentagem = $total > 0 ? ($avaliados / $total) * 100 : 0;
                 <div>
                     <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Sua Função</span>
                     <span class="px-3 py-1 rounded-lg bg-primary-600 text-white text-[10px] font-black uppercase tracking-widest shadow-md shadow-primary-600/20">
-                        <?= e(str_replace(['nota_', 'geral'], ['Nota ', 'Avaliação Geral'], $designacao->criterio)) ?>
+                        <?= e(str_replace(['nota_d', 'nota_e', 'geral'], ['Nota D', 'Nota E', 'Avaliação Geral'], $designacao->criterio)) ?>
                     </span>
                 </div>
                 
@@ -110,7 +102,16 @@ $porcentagem = $total > 0 ? ($avaliados / $total) * 100 : 0;
                                         <i class="fa-solid fa-check-double"></i>
                                     </div>
                                     <h4 class="text-lg font-outfit font-black text-slate-800 mb-1">Nota Registrada</h4>
-                                    <p class="text-sm font-bold text-emerald-600 mb-4"><?= number_format($currentIns->notaPorJurado->valor, 3) ?></p>
+                                    <?php 
+                                        // Somamos todas as notas deste jurado caso tenha enviado D + E separadamente
+                                        $votoTotal = 0;
+                                        foreach($currentIns->notas as $n) {
+                                            if ($n->jurado_id == session('user')['id']) {
+                                                $votoTotal += $n->valor;
+                                            }
+                                        }
+                                    ?>
+                                    <p class="text-sm font-bold text-emerald-600 mb-4"><?= number_format($votoTotal, 3) ?></p>
                                     <div class="px-6 py-2 rounded-full bg-slate-50 border border-slate-200 flex items-center gap-3">
                                         <div class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></div>
                                         <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Aguardando outros juízes...</span>
@@ -127,25 +128,50 @@ $porcentagem = $total > 0 ? ($avaliados / $total) * 100 : 0;
                                     <?= csrf_field() ?>
                                     
                                     <?php 
-                                        $max = 10;
-                                        if (($designacao->criterio ?? '') === 'nota_d') $max = 15;
+                                        $isFig = $prova->tipo_calculo === 'nota_d_mais_e';
+                                        $isGeral = $designacao->criterio === 'geral';
                                     ?>
                                     
-                                    <div class="relative flex-1">
-                                        <input name="valor" type="number" step="0.001" min="0" max="<?= $max ?>" placeholder="0.000" autofocus required id="input-nota"
-                                               class="w-full h-full min-h-[80px] px-8 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/5 outline-none transition-all font-outfit font-black text-3xl text-center text-slate-800 placeholder:text-slate-200">
-                                        
-                                        <div class="absolute -top-3 left-6 flex gap-2">
-                                            <label class="px-2 bg-primary-600 text-white text-[9px] font-black uppercase tracking-widest rounded-lg shadow-md leading-loose">
-                                                <?= e(str_replace(['nota_', 'geral'], ['Nota ', 'Avaliação Geral'], $designacao->criterio)) ?>
-                                            </label>
-                                            <span class="px-2 bg-slate-800 text-white text-[9px] font-black uppercase tracking-widest rounded-lg shadow-md leading-loose">
-                                                Max: <?= number_format($max, 1) ?>
-                                            </span>
+                                    <?php if ($isFig && $isGeral): ?>
+                                        <!-- Caso especial: Juiz Único no Sistema FIG (D+E) -->
+                                        <div class="grid grid-cols-2 gap-4 flex-1">
+                                            <div class="relative">
+                                                <input name="nota_d" type="number" step="0.001" min="0" max="20" placeholder="0.000" autofocus required id="input-nota-d"
+                                                       class="w-full h-[80px] px-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/5 outline-none transition-all font-outfit font-black text-2xl text-center text-slate-800 placeholder:text-slate-200">
+                                                <div class="absolute -top-3 left-6">
+                                                    <label class="px-2 bg-blue-600 text-white text-[9px] font-black uppercase tracking-widest rounded-lg shadow-md leading-loose">Nota D (Dificuldade)</label>
+                                                </div>
+                                            </div>
+                                            <div class="relative">
+                                                <input name="nota_e" type="number" step="0.001" min="0" max="10" placeholder="0.000" required id="input-nota-e"
+                                                       class="w-full h-[80px] px-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/5 outline-none transition-all font-outfit font-black text-2xl text-center text-slate-800 placeholder:text-slate-200">
+                                                <div class="absolute -top-3 left-6">
+                                                    <label class="px-2 bg-emerald-600 text-white text-[9px] font-black uppercase tracking-widest rounded-lg shadow-md leading-loose">Nota E (Execução)</label>
+                                                </div>
+                                            </div>
                                         </div>
-                                        
-                                        <p class="text-center mt-1.5 text-[9px] font-bold text-slate-400 uppercase tracking-widest">Insira o valor final da sua avaliação</p>
-                                    </div>
+                                    <?php else: ?>
+                                        <!-- Juiz normal ou outros sistemas -->
+                                        <div class="relative flex-1">
+                                            <?php 
+                                                $max = ($designacao->criterio === 'nota_d') ? 20 : 10;
+                                                $label = str_replace(['nota_d', 'nota_e', 'geral'], ['Nota D', 'Nota E', 'Avaliação Geral'], $designacao->criterio);
+                                                $color = $designacao->criterio === 'nota_d' ? 'bg-blue-600' : ($designacao->criterio === 'nota_e' ? 'bg-emerald-600' : 'bg-primary-600');
+                                            ?>
+                                            <input name="valor" type="number" step="0.001" min="0" max="<?= $max ?>" placeholder="0.000" autofocus required id="input-nota"
+                                                   class="w-full h-full min-h-[80px] px-8 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/5 outline-none transition-all font-outfit font-black text-3xl text-center text-slate-800 placeholder:text-slate-200">
+                                            
+                                            <div class="absolute -top-3 left-6 flex gap-2">
+                                                <label class="px-2 <?= $color ?> text-white text-[9px] font-black uppercase tracking-widest rounded-lg shadow-md leading-loose">
+                                                    <?= e($label) ?>
+                                                </label>
+                                                <span class="px-2 bg-slate-800 text-white text-[9px] font-black uppercase tracking-widest rounded-lg shadow-md leading-loose">
+                                                    Max: <?= number_format($max, 1) ?>
+                                                </span>
+                                            </div>
+                                            <p class="text-center mt-1.5 text-[9px] font-bold text-slate-400 uppercase tracking-widest">Insira o valor da sua avaliação</p>
+                                        </div>
+                                    <?php endif; ?>
                                     
                                     <button type="submit" id="btn-submit-nota" class="md:w-48 bg-primary-600 text-white rounded-2xl shadow-lg shadow-primary-600/20 hover:bg-primary-700 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex flex-col items-center justify-center gap-1.5 py-4 group">
                                         <i class="fa-solid fa-check-to-slot text-xl group-hover:-translate-y-1 transition-transform group-disabled:hidden"></i>
@@ -178,90 +204,55 @@ $porcentagem = $total > 0 ? ($avaliados / $total) * 100 : 0;
         </div>
     </div>
 
-    <!-- Timeline OOB -->
     <div class="space-y-4">
         <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Fila de Apresentação</h3>
-        
-        <div id="atletas-list" hx-swap-oob="true" class="space-y-2">
-            <?php foreach ($inscricoes as $ins): ?>
-                <?php 
-                    $isAtivo = $atletaAtivo && $ins->id === $atletaAtivo->id;
-                    $jaVotou = (bool) $ins->notaPorJurado;
-                ?>
-                <div class="card p-3 border-none transition-all duration-300 <?= $isAtivo ? 'bg-primary-600 text-white shadow-lg -translate-x-2' : ($jaVotou ? 'bg-emerald-50/50 opacity-60' : 'bg-white') ?>">
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-lg flex items-center justify-center text-[11px] font-black <?= $isAtivo ? 'bg-white/20' : ($jaVotou ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-400') ?>">
+        <div id="atleta-list-container">
+            <div id="atletas-list" hx-swap-oob="true" class="space-y-2">
+                <?php foreach ($inscricoes as $ins): ?>
+                    <?php 
+                        $isAtivo = $atletaAtivo && $ins->id === $atletaAtivo->id;
+                        $jaVotou = (bool) $ins->notaPorJurado;
+                    ?>
+                    <div class="card p-3 border-none transition-all duration-300 <?= $isAtivo ? 'bg-primary-600 text-white shadow-lg -translate-x-2' : ($jaVotou ? 'bg-emerald-50/50 opacity-60' : 'bg-white') ?>">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-lg flex items-center justify-center text-[11px] font-black <?= $isAtivo ? 'bg-white/20' : ($jaVotou ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-400') ?>">
+                                <?php if ($jaVotou): ?>
+                                    <i class="fa-solid fa-check"></i>
+                                <?php else: ?>
+                                    <?= $ins->ordem_apresentacao ?: '#' ?>
+                                <?php endif; ?>
+                            </div>
+                            
+                            <div class="flex-1 min-w-0">
+                                <h4 class="font-bold text-xs truncate <?= $isAtivo ? 'text-white' : 'text-slate-800' ?>">
+                                    <?= e($ins->atleta->nome_completo) ?>
+                                </h4>
+                                <p class="text-[9px] font-bold uppercase tracking-tight opacity-60">
+                                    <?= e($ins->atleta->equipe->nome ?? 'Avulso') ?>
+                                </p>
+                            </div>
+
                             <?php if ($jaVotou): ?>
-                                <i class="fa-solid fa-check"></i>
-                            <?php else: ?>
-                                <?= $ins->ordem_apresentacao ?: '#' ?>
+                                <?php 
+                                    $votoSoma = 0;
+                                    foreach($ins->notas as $n) {
+                                        if ($n->jurado_id == session('user')['id']) $votoSoma += $n->valor;
+                                    }
+                                ?>
+                                <span class="text-[10px] font-black font-outfit <?= $isAtivo ? 'text-white' : 'text-slate-600' ?>">
+                                    <?= number_format($votoSoma, 3) ?>
+                                </span>
                             <?php endif; ?>
                         </div>
-                        
-                        <div class="flex-1 min-w-0">
-                            <h4 class="font-bold text-xs truncate <?= $isAtivo ? 'text-white' : 'text-slate-800' ?>">
-                                <?= e($ins->atleta->nome_completo) ?>
-                            </h4>
-                            <p class="text-[9px] font-bold uppercase tracking-tight opacity-60">
-                                <?= e($ins->atleta->equipe->nome ?? 'Avulso') ?>
-                            </p>
-                        </div>
-
-                        <?php if ($jaVotou): ?>
-                            <span class="text-[10px] font-black font-outfit <?= $isAtivo ? 'text-white' : 'text-slate-600' ?>">
-                                <?= number_format($ins->notaPorJurado->valor, 3) ?>
-                            </span>
-                        <?php endif; ?>
                     </div>
-    <!-- Timeline OOB -->
-    <div class="space-y-4">
-        <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Fila de Apresentação</h3>
-        
-        <div id="atletas-list" hx-swap-oob="true" class="space-y-2">
-            <?php foreach ($inscricoes as $ins): ?>
-                <?php 
-                    $isAtivo = $atletaAtivo && $ins->id === $atletaAtivo->id;
-                    $jaVotou = (bool) $ins->notaPorJurado;
-                ?>
-                <div class="card p-3 border-none transition-all duration-300 <?= $isAtivo ? 'bg-primary-600 text-white shadow-lg -translate-x-2' : ($jaVotou ? 'bg-emerald-50/50 opacity-60' : 'bg-white') ?>">
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-lg flex items-center justify-center text-[11px] font-black <?= $isAtivo ? 'bg-white/20' : ($jaVotou ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-400') ?>">
-                            <?php if ($jaVotou): ?>
-                                <i class="fa-solid fa-check"></i>
-                            <?php else: ?>
-                                <?= $ins->ordem_apresentacao ?: '#' ?>
-                            <?php endif; ?>
-                        </div>
-                        
-                        <div class="flex-1 min-w-0">
-                            <h4 class="font-bold text-xs truncate <?= $isAtivo ? 'text-white' : 'text-slate-800' ?>">
-                                <?= e($ins->atleta->nome_completo) ?>
-                            </h4>
-                            <p class="text-[9px] font-bold uppercase tracking-tight opacity-60">
-                                <?= e($ins->atleta->equipe->nome ?? 'Avulso') ?>
-                            </p>
-                        </div>
-
-                        <?php if ($jaVotou): ?>
-                            <span class="text-[10px] font-black font-outfit <?= $isAtivo ? 'text-white' : 'text-slate-600' ?>">
-                                <?= number_format($ins->notaPorJurado->valor, 3) ?>
-                            </span>
-                        <?php endif; ?>
-                    </div>
-                </div>
-            <?php endforeach; ?>
-            <?php endforeach; ?>
+                <?php endforeach; ?>
+            </div>
         </div>
 
         <div class="card p-4 bg-slate-900 text-white border-none shadow-xl mt-6">
             <div class="flex items-start gap-3">
                 <i class="fa-solid fa-keyboard text-primary-400 mt-0.5"></i>
-        <div class="card p-4 bg-slate-900 text-white border-none shadow-xl mt-6">
-            <div class="flex items-start gap-3">
-                <i class="fa-solid fa-keyboard text-primary-400 mt-0.5"></i>
                 <div>
-                    <h5 class="text-[9px] font-black text-primary-400 uppercase tracking-widest mb-1">Dica de Produtividade</h5>
-                    <p class="text-[11px] text-slate-400 leading-snug">O cursor foca automaticamente no campo de nota. Após digitar, aperte <kbd class="px-1 bg-white/10 rounded text-white inline-block">Enter</kbd> para enviar rápido.</p>
                     <h5 class="text-[9px] font-black text-primary-400 uppercase tracking-widest mb-1">Dica de Produtividade</h5>
                     <p class="text-[11px] text-slate-400 leading-snug">O cursor foca automaticamente no campo de nota. Após digitar, aperte <kbd class="px-1 bg-white/10 rounded text-white inline-block">Enter</kbd> para enviar rápido.</p>
                 </div>
