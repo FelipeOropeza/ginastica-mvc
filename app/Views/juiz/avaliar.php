@@ -7,6 +7,7 @@ foreach ($inscricoes as $ins) {
 }
 $total = count($inscricoes);
 $porcentagem = $total > 0 ? ($avaliados / $total) * 100 : 0;
+$porcentagem = $total > 0 ? ($avaliados / $total) * 100 : 0;
 ?>
 
 <!-- Progress Bar OOB -->
@@ -14,7 +15,14 @@ $porcentagem = $total > 0 ? ($avaliados / $total) * 100 : 0;
     <div class="flex items-center justify-between mb-2">
         <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Progresso da Avaliação</span>
         <span class="text-[10px] font-black text-primary-600 uppercase tracking-widest"><?= $avaliados ?> / <?= $total ?></span>
+<!-- Progress Bar OOB -->
+<div id="progress-container" hx-swap-oob="true" class="card p-4 mb-6 bg-white border-none shadow-sm">
+    <div class="flex items-center justify-between mb-2">
+        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Progresso da Avaliação</span>
+        <span class="text-[10px] font-black text-primary-600 uppercase tracking-widest"><?= $avaliados ?> / <?= $total ?></span>
     </div>
+    <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+        <div class="h-full bg-primary-500 rounded-full transition-all duration-500" style="width: <?= $porcentagem ?>%"></div>
     <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
         <div class="h-full bg-primary-500 rounded-full transition-all duration-500" style="width: <?= $porcentagem ?>%"></div>
     </div>
@@ -252,7 +260,12 @@ $porcentagem = $total > 0 ? ($avaliados / $total) * 100 : 0;
         <div class="card p-4 bg-slate-900 text-white border-none shadow-xl mt-6">
             <div class="flex items-start gap-3">
                 <i class="fa-solid fa-keyboard text-primary-400 mt-0.5"></i>
+        <div class="card p-4 bg-slate-900 text-white border-none shadow-xl mt-6">
+            <div class="flex items-start gap-3">
+                <i class="fa-solid fa-keyboard text-primary-400 mt-0.5"></i>
                 <div>
+                    <h5 class="text-[9px] font-black text-primary-400 uppercase tracking-widest mb-1">Dica de Produtividade</h5>
+                    <p class="text-[11px] text-slate-400 leading-snug">O cursor foca automaticamente no campo de nota. Após digitar, aperte <kbd class="px-1 bg-white/10 rounded text-white inline-block">Enter</kbd> para enviar rápido.</p>
                     <h5 class="text-[9px] font-black text-primary-400 uppercase tracking-widest mb-1">Dica de Produtividade</h5>
                     <p class="text-[11px] text-slate-400 leading-snug">O cursor foca automaticamente no campo de nota. Após digitar, aperte <kbd class="px-1 bg-white/10 rounded text-white inline-block">Enter</kbd> para enviar rápido.</p>
                 </div>
