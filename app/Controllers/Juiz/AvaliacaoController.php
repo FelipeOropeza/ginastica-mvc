@@ -71,7 +71,7 @@ class AvaliacaoController
             ->whereIn('status', ['confirmada', 'pendente'])
             ->orderBy('ordem_apresentacao', 'ASC')
             ->orderBy('id', 'ASC')
-            ->with(['atleta.equipe', 'notaPorJurado' => function($db) use ($juradoId) {
+            ->with(['atleta.equipe', 'atleta.categoria', 'notas' => function($db) use ($juradoId) {
                 return $db->where('jurado_id', '=', $juradoId);
             }])
             ->get();
@@ -80,9 +80,10 @@ class AvaliacaoController
         $jaAvaliouAtivo = false;
         if ($atletaAtivo) {
             foreach ($inscricoes as $ins) {
-                if ($ins->id === $atletaAtivo->id && $ins->notaPorJurado) {
+                // Auxílio: seta notaPorJurado como a primeira nota do jurado para manter compatibilidade básica com boolean checks
+                $ins->notaPorJurado = $ins->notas[0] ?? null;
+                if ($ins->id === $atletaAtivo->id && !empty($ins->notas)) {
                     $jaAvaliouAtivo = true;
-                    break;
                 }
             }
         }
@@ -105,19 +106,26 @@ class AvaliacaoController
     public function salvarNota(int $inscricao_id)
     {
         $juradoId = session('user')['id'];
-        $rawValor = request()->get('valor');
-        // Normaliza vírgula para ponto e limpa espaços
-        $normalizedValor = str_replace(',', '.', trim((string)$rawValor));
-        $valor = (float) $normalizedValor;
-        
         $observacao = request()->get('observacao');
 
         try {
-            $this->service->registrarNota($juradoId, $inscricao_id, $valor, $observacao);
+            // Se houver campos específicos de D e E (Sistema FIG com juiz único)
+            if (request()->has('nota_d') && request()->has('nota_e')) {
+                $notaD = (float) str_replace(',', '.', trim((string)request()->get('nota_d')));
+                $notaE = (float) str_replace(',', '.', trim((string)request()->get('nota_e')));
+                
+                $this->service->registrarNota($juradoId, $inscricao_id, $notaD, $observacao, 'nota_d');
+                $this->service->registrarNota($juradoId, $inscricao_id, $notaE, $observacao, 'nota_e');
+            } else {
+                // Caso padrão (um único valor)
+                $rawValor = request()->get('valor');
+                $normalizedValor = str_replace(',', '.', trim((string)$rawValor));
+                $valor = (float) $normalizedValor;
+                
+                $this->service->registrarNota($juradoId, $inscricaoId = $inscricao_id, $valor, $observacao);
+            }
             
             if (request()->isHtmx()) {
-                 // Ao salvar via HTMX, redirecionamos para recarregar a lógica do "Atleta Ativo"
-                 // ou retornamos a própria view de avaliação que o htmx vai filtrar com hx-select
                  return $this->avaliar((int) (new \App\Models\Inscricao())->find($inscricao_id)->prova_id);
             }
 

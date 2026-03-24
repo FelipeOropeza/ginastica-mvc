@@ -10,8 +10,22 @@
     </a>
 </div>
 
+<script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.store('competicaoStatus', {
+            openId: null,
+            toggle(id) {
+                this.openId = this.openId === id ? null : id;
+            },
+            close() {
+                this.openId = null;
+            }
+        });
+    });
+</script>
+
 <div class="card">
-    <div class="overflow-x-auto md:overflow-visible min-h-[400px]">
+    <div class="overflow-x-auto md:overflow-visible min-h-[500px]" x-data @click.away="$store.competicaoStatus.close()">
         <table class="w-full text-left border-collapse">
             <thead>
                 <tr class="bg-slate-50 border-b border-slate-200">
@@ -36,7 +50,7 @@
                         foreach ($competicoes as $index => $comp): 
                             $isLastRows = ($total > 3 && $index >= $total - 2);
                     ?>
-                        <tr id="comp-<?= $comp->id ?>" class="hover:bg-slate-50 transition-colors">
+                        <tr id="comp-<?= $comp->id ?>" class="hover:bg-slate-50 transition-colors animate-in fade-in duration-300">
                             <td class="px-5 py-4">
                                 <div class="flex items-center gap-3">
                                     <div class="w-8 h-8 bg-slate-100 text-slate-500 rounded flex items-center justify-center text-sm shrink-0">
@@ -83,12 +97,12 @@
 
                                     <!-- Status Dropdown -->
                                     <div x-show="open" 
-                                         x-transition:enter="transition ease-out duration-100"
-                                         x-transition:enter-start="opacity-0 scale-95"
-                                         x-transition:enter-end="opacity-100 scale-100"
-                                         @click.away="open = false" 
-                                         class="absolute right-0 <?= $isLastRows ? 'bottom-full mb-2' : 'top-full mt-2' ?> w-52 bg-white rounded-2xl shadow-2xl ring-1 ring-black/5 z-[100] py-2 overflow-hidden" 
-                                         style="display: none;">
+                                            x-transition:enter="transition ease-out duration-100"
+                                            x-transition:enter-start="opacity-0 scale-95"
+                                            x-transition:enter-end="opacity-100 scale-100"
+                                            @click.away="open = false" 
+                                            class="absolute right-0 <?= $isLastRows ? 'bottom-full mb-2' : 'top-full mt-2' ?> w-52 bg-white rounded-2xl shadow-2xl ring-1 ring-black/5 z-[100] py-2 overflow-hidden" 
+                                            style="display: none;">
                                         <div class="px-3 pb-2 mb-1 border-b border-slate-50">
                                             <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Alterar Status</p>
                                         </div>
@@ -97,7 +111,7 @@
                                                 hx-post="<?= route('admin.competicoes.status', ['id' => $comp->id]) ?>"
                                                 hx-vals='{"status": "<?= $val ?>"}'
                                                 hx-headers='{"X-CSRF-TOKEN": "<?= csrf_token() ?>"}'
-                                                hx-target="#status-badge-<?= $comp->id ?>"
+                                                hx-target="#comp-<?= $comp->id ?>"
                                                 hx-swap="outerHTML"
                                                 @click="open = false"
                                                 class="w-full text-left px-4 py-2 text-[10px] font-bold uppercase tracking-widest transition-all flex items-center justify-between <?= $comp->status === $val ? 'text-primary-600 bg-primary-50/50' : 'text-slate-600 hover:bg-slate-50 hover:text-primary-600' ?>"
@@ -112,7 +126,13 @@
                                 </div>
                             </td>
                             <td class="px-5 py-4 text-right">
-                                <div class="flex justify-end gap-1.5">
+                                <div class="flex justify-end gap-1.5 items-center">
+                                    <?php if ($comp->status === 'em_andamento'): ?>
+                                        <a href="<?= route('publico.live', ['id' => $comp->id]) ?>" target="_blank" title="Painel Ao Vivo" 
+                                            class="w-7 h-7 rounded-lg bg-emerald-500 text-white flex items-center justify-center hover:bg-emerald-600 hover:scale-110 transition-all shadow-md shadow-emerald-500/20 animate-pulse">
+                                            <i class="fa-solid fa-tower-broadcast text-[10px]"></i>
+                                        </a>
+                                    <?php endif; ?>
                                     <a href="<?= route('admin.provas.index', ['id' => $comp->id]) ?>" title="Provas" class="w-7 h-7 rounded border border-slate-200 text-slate-500 flex items-center justify-center hover:bg-slate-50 hover:text-primary-600 transition-all shadow-sm">
                                         <i class="fa-solid fa-list-check text-[10px]"></i>
                                     </a>
@@ -138,3 +158,5 @@
         </table>
     </div>
 </div>
+
+
