@@ -96,9 +96,9 @@
                                 <?php foreach ($results as $row): ?>
                                     <?php
                                     $podioClass = match($row['resultado']->podio) {
-                                        'ouro' => 'bg-yellow-100 text-yellow-700',
-                                        'prata' => 'bg-slate-100 text-slate-600',
-                                        'bronze' => 'bg-orange-100 text-orange-700',
+                                        1 => 'bg-yellow-100 text-yellow-700',
+                                        2 => 'bg-slate-100 text-slate-600',
+                                        3 => 'bg-orange-100 text-orange-700',
                                         default => ''
                                     };
                                     ?>

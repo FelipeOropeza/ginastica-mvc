@@ -100,16 +100,25 @@
                     <template x-if="currentRole === 'atleta'">
                         <div class="contents">
                             <div class="space-y-1.5">
+                                <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest">Data de Nascimento</label>
+                                <input name="technical[data_nascimento]" type="date" value="<?= e($usuario->atleta->data_nascimento ?? '') ?>" class="form-input">
+                            </div>
+                            <div class="space-y-1.5">
                                 <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest">CPF</label>
-                                <input name="technical[cpf]" type="text" value="<?= e($usuario->atleta->cpf ?? '') ?>" class="form-input">
+                                <input name="technical[cpf]" type="text" value="<?= e($usuario->atleta->cpf ?? '') ?>" placeholder="000.000.000-00" class="form-input">
                             </div>
                             <div class="space-y-1.5">
                                 <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest">Categoria</label>
                                 <select name="technical[categoria_id]" class="form-input">
+                                    <option value="">Selecione</option>
                                     <?php foreach ($categorias as $cat): ?>
                                         <option value="<?= $cat->id ?>" <?= ($usuario->atleta->categoria_id ?? 0) == $cat->id ? 'selected' : '' ?>><?= e($cat->nome) ?></option>
                                     <?php endforeach; ?>
                                 </select>
+                            </div>
+                            <div class="space-y-1.5">
+                                <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest">Nº Registro (Federação)</label>
+                                <input name="technical[numero_registro]" type="text" value="<?= e($usuario->atleta->numero_registro ?? '') ?>" placeholder="Registro na federação" class="form-input">
                             </div>
                         </div>
                     </template>

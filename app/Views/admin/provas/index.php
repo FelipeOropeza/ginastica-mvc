@@ -82,19 +82,24 @@
         <?php else: ?>
             <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 <?php foreach ($provas as $prova): ?>
-                    <div class="card p-4 hover:border-primary-200 transition-colors">
+                    <div class="card p-4 transition-colors <?= $prova->encerrada ? 'border-rose-200 bg-rose-50/30 opacity-75' : 'hover:border-primary-200' ?>">
                         <div class="flex justify-between items-start mb-3">
-                            <div class="w-8 h-8 rounded bg-slate-50 text-slate-400 flex items-center justify-center text-sm border border-slate-100">
-                                <?php 
-                                    $icons = [
-                                        'solo' => 'fa-child-reaching',
-                                        'salto' => 'fa-person-running',
-                                        'barras_assimetricas' => 'fa-bars-staggered',
-                                        'trave' => 'fa-grip-lines'
-                                    ];
-                                    $icon = $icons[$prova->aparelho] ?? 'fa-medal';
-                                ?>
-                                <i class="fa-solid <?= $icon ?>"></i>
+                            <div class="flex items-center gap-2">
+                                <div class="w-8 h-8 rounded bg-slate-50 text-slate-400 flex items-center justify-center text-sm border border-slate-100">
+                                    <?php 
+                                        $icons = [
+                                            'solo' => 'fa-child-reaching',
+                                            'salto' => 'fa-person-running',
+                                            'barras_assimetricas' => 'fa-bars-staggered',
+                                            'trave' => 'fa-grip-lines'
+                                        ];
+                                        $icon = $icons[$prova->aparelho] ?? 'fa-medal';
+                                    ?>
+                                    <i class="fa-solid <?= $icon ?>"></i>
+                                </div>
+                                <?php if ($prova->encerrada): ?>
+                                    <span class="px-1.5 py-0.5 rounded bg-rose-100 text-[8px] font-black text-rose-600 uppercase tracking-widest border border-rose-200">Encerrada</span>
+                                <?php endif; ?>
                             </div>
                             <form action="/admin/provas/<?= $prova->id ?>/deletar" method="POST">
                                 <button type="submit" class="text-slate-300 hover:text-red-500 transition-colors">
@@ -141,6 +146,18 @@
                             <a href="/admin/provas/<?= $prova->id ?>/ordem" class="text-[11px] font-bold text-primary-600 hover:text-primary-700 flex items-center justify-between group/link">
                                 Sorteio / Fila <i class="fa-solid fa-list-ol text-[9px] group-hover/link:translate-x-0.5 transition-transform"></i>
                             </a>
+                            <a href="/admin/provas/<?= $prova->id ?>/notas" class="text-[11px] font-bold text-amber-600 hover:text-amber-700 flex items-center justify-between group/link">
+                                Gerenciar Notas <i class="fa-solid fa-clipboard-check text-[9px] opacity-30 group-hover/link:opacity-100 transition-opacity"></i>
+                            </a>
+                            <?php if ($prova->encerrada): ?>
+                                <p class="text-[9px] text-center pt-1.5 font-bold text-rose-500 uppercase tracking-wider">
+                                    <i class="fa-solid fa-lock mr-1"></i> Para reabrir, use "Gerenciar Notas"
+                                </p>
+                            <?php else: ?>
+                                <p class="text-[9px] text-slate-400 text-center pt-1 italic">
+                                    <i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Encerramento automático ao final das notas
+                                </p>
+                            <?php endif; ?>
                         </div>
                     </div>
                 <?php endforeach; ?>

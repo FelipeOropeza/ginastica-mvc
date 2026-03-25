@@ -110,8 +110,20 @@ class CompetitionController
         }
 
         if (request()->isHtmx()) {
+            $comp = $this->service->findById($id);
+            $allComps = $this->service->getAll();
+            $total = count($allComps);
+            $index = 0;
+            foreach ($allComps as $i => $c) {
+                if ($c->id === $comp->id) {
+                    $index = $i;
+                    break;
+                }
+            }
             return view('admin/competicoes/partials/row', [
-                'comp' => $this->service->findById($id)
+                'comp' => $comp,
+                'total' => $total,
+                'index' => $index,
             ]);
         }
 
