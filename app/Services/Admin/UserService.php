@@ -95,36 +95,33 @@ class UserService
         $role = (new Role())->find($usuario->role_id);
         $roleName = $role->nome ?? 'não encontrado';
 
-        logger()->debug("Syncing Technical Data for User ID: {$usuario->id}, Role: {$roleName}");
-        logger()->debug("Technical Data received: " . json_encode($technicalData));
-
         if (empty($technicalData)) {
-            logger()->debug("Technical Data is empty, skipping.");
             return;
         }
+
+        // Converte strings vazias para null (evita erro de tipo em colunas INT/FK)
+        $clean = fn(?string $val) => ($val !== null && $val !== '') ? $val : null;
 
         if ($roleName === 'atleta') {
             $atleta = (new \App\Models\Atleta())->where('usuario_id', '=', $usuario->id)->first() ?? new \App\Models\Atleta();
             $atleta->usuario_id = $usuario->id;
-            $atleta->nome_completo = $technicalData['nome_completo'] ?? $usuario->nome;
-            $atleta->equipe_id = $technicalData['equipe_id'] ?? null;
-            $atleta->categoria_id = $technicalData['categoria_id'] ?? null;
-            $atleta->cpf = $technicalData['cpf'] ?? null;
+            $atleta->nome_completo = $clean($technicalData['nome_completo'] ?? null) ?? $usuario->nome;
+            $atleta->equipe_id = $clean($technicalData['equipe_id'] ?? null);
+            $atleta->categoria_id = $clean($technicalData['categoria_id'] ?? null);
+            $atleta->cpf = $clean($technicalData['cpf'] ?? null);
+            $atleta->data_nascimento = $clean($technicalData['data_nascimento'] ?? null);
+            $atleta->numero_registro = $clean($technicalData['numero_registro'] ?? null);
             $atleta->ativo = $usuario->ativo;
-            $saved = $atleta->save();
-            logger()->debug("Atleta save status: " . ($saved ? 'Success' : 'Failed'));
+            $atleta->save();
         } elseif ($roleName === 'treinador') {
             $treinador = (new \App\Models\Treinador())->where('usuario_id', '=', $usuario->id)->first() ?? new \App\Models\Treinador();
             $treinador->usuario_id = $usuario->id;
-            $treinador->nome_completo = $technicalData['nome_completo'] ?? $usuario->nome;
-            $treinador->equipe_id = $technicalData['equipe_id'] ?? null;
-            $treinador->cref = $technicalData['cref'] ?? null;
-            $treinador->especialidade = $technicalData['especialidade'] ?? null;
+            $treinador->nome_completo = $clean($technicalData['nome_completo'] ?? null) ?? $usuario->nome;
+            $treinador->equipe_id = $clean($technicalData['equipe_id'] ?? null);
+            $treinador->cref = $clean($technicalData['cref'] ?? null);
+            $treinador->especialidade = $clean($technicalData['especialidade'] ?? null);
             $treinador->ativo = $usuario->ativo;
-            $saved = $treinador->save();
-            logger()->debug("Treinador save status: " . ($saved ? 'Success' : 'Failed'));
-        } else {
-            logger()->debug("Role '{$roleName}' is not technically linked to Atleta or Treinador.");
+            $treinador->save();
         }
     }
 
