@@ -25,7 +25,7 @@
         <?= e($comp->local) ?>
     </td>
     <td class="px-5 py-4">
-        <div class="relative inline-block" x-data>
+        <div class="relative inline-block" x-data="{ open: false, id: <?= $comp->id ?> }" @close-menus.window="if($event.detail.id !== id) open = false">
             <?php 
                 $statusClasses = [
                     'rascunho' => 'bg-slate-100 text-slate-500 border-slate-200',
@@ -41,7 +41,7 @@
                 ];
                 $classe = $statusClasses[$comp->status] ?? 'bg-slate-100 text-slate-600';
             ?>
-            <button @click.stop="$store.competicaoStatus.toggle(<?= $comp->id ?>)" id="status-badge-<?= $comp->id ?>" 
+            <button @click.stop="open = !open; if(open) $dispatch('close-menus', { id: id })" id="status-badge-<?= $comp->id ?>" 
                     class="px-2 py-1 rounded-lg border text-[9px] uppercase tracking-tighter font-black transition-all hover:brightness-95 flex items-center gap-1.5 shadow-sm <?= $classe ?>">
                 <span class="w-1.5 h-1.5 rounded-full bg-current opacity-50"></span>
                 <?= $statusLabels[$comp->status] ?? e($comp->status) ?>
@@ -49,11 +49,11 @@
             </button>
 
             <!-- Status Dropdown -->
-            <div x-show="$store.competicaoStatus.openId === <?= $comp->id ?>" 
+            <div x-show="open" 
                     x-transition:enter="transition ease-out duration-100"
                     x-transition:enter-start="opacity-0 scale-95"
                     x-transition:enter-end="opacity-100 scale-100"
-                    @click.away="if($store.competicaoStatus.openId === <?= $comp->id ?>) $store.competicaoStatus.close()" 
+                    @click.away="open = false" 
                     class="absolute right-0 <?= $isLastRows ? 'bottom-full mb-3' : 'top-full mt-3' ?> w-52 bg-white rounded-2xl shadow-2xl ring-1 ring-black/5 z-[100] py-2 overflow-hidden border border-slate-100" 
                     style="display: none;">
                 <div class="px-4 py-2 mb-1 border-b border-slate-50">

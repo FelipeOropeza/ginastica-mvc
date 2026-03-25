@@ -141,6 +141,21 @@ class AvaliacaoService
             throw new ValidationException(['nota' => "Você já enviou a nota para este atleta neste critério ($criterioFinal)."]);
         }
 
+        // Regra de prova encerrada: bloqueia NOVAS notas, mas permite re-entrada
+        // Se a nota não existe (foi deletada pelo admin via "Reabrir"), o juiz pode re-entrar
+        // Se a nota existe (checado acima), já foi bloqueado pelo $jaAvaliado
+        $prova = $inscricao->prova;
+        if ($prova && $prova->encerrada) {
+            // A nota não existe (passou pelo check acima) — verificar se é uma re-entrada autorizada
+            // Se o resultado do atleta NÃO está calculado, significa que o admin reabriu algo
+            $resultado = (new Resultado())->where('inscricao_id', '=', $inscricaoId)->first();
+            $isReabertura = !$resultado || !$resultado->calculado;
+
+            if (!$isReabertura) {
+                throw new ValidationException(['status' => "Esta prova (" . str_replace('_', ' ', $prova->aparelho) . ") já foi encerrada."]);
+            }
+        }
+
         $nota = new Nota();
         $nota->inscricao_id = $inscricaoId;
         $nota->jurado_id = $juradoId;
@@ -243,6 +258,9 @@ class AvaliacaoService
         if ($resultado->save()) {
             Resultado::calcularRanking($inscricao->prova_id);
 
+            // Auto-encerrar prova se todos os atletas foram avaliados
+            $this->verificarAutoEncerramento($inscricao->prova_id);
+
             // Transmitir evento Mercure para o dashboard AO VIVO
             $update = new \Symfony\Component\Mercure\Update(
                 'competicao-' . $inscricao->competicao_id,
@@ -254,6 +272,34 @@ class AvaliacaoService
                 ])
             );
             $this->hub->publish($update);
+        }
+    }
+
+    /**
+     * Verifica se todas as inscrições de uma prova já foram totalmente avaliadas.
+     * Se sim, encerra a prova automaticamente.
+     */
+    private function verificarAutoEncerramento(int $provaId): void
+    {
+        $inscricoes = (new Inscricao())
+            ->where('prova_id', '=', $provaId)
+            ->whereIn('status', ['confirmada', 'pendente'])
+            ->get();
+
+        if (empty($inscricoes)) return;
+
+        foreach ($inscricoes as $ins) {
+            $resultado = (new Resultado())->where('inscricao_id', '=', $ins->id)->first();
+            if (!$resultado || !$resultado->calculado) {
+                return; // Ainda tem atleta pendente, não encerra
+            }
+        }
+
+        // Todos calculados — encerrar prova automaticamente
+        $prova = (new Prova())->find($provaId);
+        if ($prova && !$prova->encerrada) {
+            $prova->encerrada = 1;
+            $prova->save();
         }
     }
 }

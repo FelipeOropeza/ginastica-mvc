@@ -106,9 +106,9 @@
                                             default => 'bg-slate-100 text-slate-600'
                                         };
                                         $podioIcon = match($inscricao->resultado?->podio) {
-                                            'ouro' => '<i class="fa-solid fa-medal text-yellow-500 text-base"></i>',
-                                            'prata' => '<i class="fa-solid fa-medal text-slate-400 text-base"></i>',
-                                            'bronze' => '<i class="fa-solid fa-medal text-orange-500 text-base"></i>',
+                                            1 => '<i class="fa-solid fa-medal text-yellow-500 text-base"></i>',
+                                            2 => '<i class="fa-solid fa-medal text-slate-400 text-base"></i>',
+                                            3 => '<i class="fa-solid fa-medal text-orange-500 text-base"></i>',
                                             default => '-'
                                         };
                                         ?>
