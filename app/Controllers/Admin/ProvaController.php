@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Controllers\Admin;
 
 use App\Services\Admin\ProvaService;
@@ -129,47 +131,26 @@ class ProvaController
         ]);
     }
 
+    #[Post('/admin/competicoes/{id}/provas/shuffle-all', name: 'admin.provas.shuffle_all')]
+    public function shuffleAll(int $id)
+    {
+        $this->competitionService->shuffleAll($id);
+
+        if (request()->isHtmx()) {
+            session()->set('success', 'Ordem de apresentação gerada para todas as provas com sucesso!');
+            header('HX-Refresh: true');
+            return new Response('');
+        }
+
+        return Response::makeRedirect("/admin/competicoes/{$id}/provas");
+    }
+
     #[Post('/admin/notas/{id}/reabrir', name: 'admin.notas.reabrir')]
     public function reabrirNota(int $id)
     {
-        $nota = (new \App\Models\Nota())->find($id);
-
-        if (!$nota) {
-            abort(404);
-        }
-
-        $inscricaoId = $nota->inscricao_id;
-        $inscricao = (new \App\Models\Inscricao())->with(['prova', 'competicao'])->find($inscricaoId);
-        $provaId = $inscricao->prova_id;
-
-        // Bloquear se a competição já foi encerrada
-        if ($inscricao->competicao && $inscricao->competicao->status === 'encerrada') {
-            fail_validation(['status' => 'A competição já foi encerrada. Os resultados são definitivos.']);
-        }
-
-        // Deletar a nota específica
-        (new \App\Models\Nota())->delete($id);
-
-        // Recalcular resultado deste atleta (fica parcial = calculado=0)
-        $notasRestantes = (new \App\Models\Nota())->where('inscricao_id', '=', $inscricaoId)->get();
-
-        if (empty($notasRestantes)) {
-            $resultado = (new \App\Models\Resultado())->where('inscricao_id', '=', $inscricaoId)->first();
-            if ($resultado) {
-                (new \App\Models\Resultado())->delete($resultado->id);
-            }
-        } else {
-            // Recalcular — o resultado ficará com calculado=0 (faltam notas)
-            $avaliacaoService = app(\App\Services\Juiz\AvaliacaoService::class);
-            $avaliacaoService->atualizarResultadoFinal($inscricaoId);
-        }
-
-        // Recalcular ranking da prova
-        \App\Models\Resultado::calcularRanking($provaId);
-
-        // A prova permanece encerrada para todos os outros atletas
-        // Apenas este atleta fica com resultado pendente, permitindo re-entrada do juiz
+        $provaId = $this->provaService->reabrirNota($id);
 
         return Response::makeRedirect("/admin/provas/{$provaId}/notas");
     }
 }
+

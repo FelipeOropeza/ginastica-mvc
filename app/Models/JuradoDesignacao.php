@@ -12,7 +12,9 @@ class JuradoDesignacao extends Model
     /**
      * A designação pertence a uma prova.
      */
-    public function prova(): mixed
+    public bool $softDeletes = true;
+
+    public function prova(): object
     {
         return $this->belongsTo(Prova::class, 'prova_id', 'id');
     }
@@ -20,7 +22,7 @@ class JuradoDesignacao extends Model
     /**
      * A designação pertence a um usuário (jurado).
      */
-    public function jurado(): mixed
+    public function jurado(): object
     {
         return $this->belongsTo(Usuario::class, 'usuario_id', 'id');
     }

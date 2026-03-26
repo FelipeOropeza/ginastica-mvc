@@ -19,6 +19,7 @@ class CreateNotasTable
             $table->decimal('valor', 5, 3);              // Ex: 9.250, 5.600
             $table->text('observacao')->nullable();
             $table->timestamp('registrado_em')->nullable();
+            $table->softDeletes();
             $table->timestamps();
 
             $table->foreign('inscricao_id')->references('id')->on('inscricoes');

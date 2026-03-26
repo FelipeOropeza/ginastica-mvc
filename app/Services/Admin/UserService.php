@@ -44,11 +44,13 @@ class UserService
         $usuario->ativo = (int) $dto->ativo;
         $usuario->senha = password_hash($dto->senha ?? 'gym123456', PASSWORD_DEFAULT);
 
-        if ($usuario->save()) {
+        // Transaction garante que usuario + perfil técnico são criados juntos
+        $usuario->transaction(function () use ($usuario) {
+            $usuario->save();
             $this->syncTechnicalData($usuario, request()->get('technical') ?? []);
-            return true;
-        }
-        return false;
+        });
+
+        return true;
     }
 
     /**
@@ -80,11 +82,13 @@ class UserService
         $usuario->role_id = $dto->role_id;
         $usuario->ativo = (int) $dto->ativo;
 
-        if ($usuario->save()) {
+        // Transaction garante que dados do usuário e perfil técnico são atualizados juntos
+        $usuario->transaction(function () use ($usuario) {
+            $usuario->save();
             $this->syncTechnicalData($usuario, request()->get('technical') ?? []);
-            return true;
-        }
-        return false;
+        });
+
+        return true;
     }
 
     /**

@@ -22,6 +22,8 @@ class Treinador extends Model
         return $this->belongsTo(Usuario::class, 'usuario_id');
     }
 
+    public bool $softDeletes = true;
+
     public function equipe()
     {
         return $this->belongsTo(Equipe::class, 'equipe_id');

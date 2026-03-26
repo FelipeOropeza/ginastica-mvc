@@ -20,20 +20,36 @@ class RelatorioService
     public function getCompetitionsWithResults(): array
     {
         $competitions = $this->getCompetitions();
-        
-        foreach ($competitions as $competition) {
-            $competition->total_inscritos = (new Inscricao())
-                ->where('competicao_id', '=', $competition->id)
-                ->count();
-            
-            $competition->total_resultados = (new Resultado())
-                ->join('inscricoes', 'inscricoes.id = resultados.inscricao_id')
-                ->where('inscricoes.competicao_id', '=', $competition->id)
-                ->count();
+
+        // Uma única query com GROUP BY ao invés de 2 queries por competição (N+1)
+        $rows = \Core\Database\Connection::getInstance()->query("
+            SELECT
+                i.competicao_id,
+                COUNT(DISTINCT i.id)  AS total_inscritos,
+                COUNT(DISTINCT r.id)  AS total_resultados
+            FROM inscricoes i
+            LEFT JOIN resultados r ON r.inscricao_id = i.id
+            WHERE i.deleted_at IS NULL
+              AND (r.id IS NULL OR r.deleted_at IS NULL)
+            GROUP BY i.competicao_id
+        ")->fetchAll(\PDO::FETCH_ASSOC);
+
+        $countMap = [];
+        foreach ($rows as $row) {
+            $countMap[$row['competicao_id']] = [
+                'total_inscritos'  => (int) $row['total_inscritos'],
+                'total_resultados' => (int) $row['total_resultados'],
+            ];
         }
-        
+
+        foreach ($competitions as $competition) {
+            $competition->total_inscritos  = $countMap[$competition->id]['total_inscritos']  ?? 0;
+            $competition->total_resultados = $countMap[$competition->id]['total_resultados'] ?? 0;
+        }
+
         return $competitions;
     }
+
 
     public function getCompetitionDetails(int $competitionId): ?Competicao
     {

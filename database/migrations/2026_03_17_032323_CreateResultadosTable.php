@@ -19,7 +19,8 @@ class CreateResultadosTable
             $table->integer('classificacao')->nullable();
             // Flag de pódio: 1=ouro, 2=prata, 3=bronze, null=sem pódio
             $table->integer('podio')->nullable();
-            $table->boolean('calculado')->nullable();            // já foi processado?
+            $table->boolean('calculado')->default(false);            // já foi processado?
+            $table->softDeletes();
             $table->timestamps();
 
             $table->foreign('inscricao_id')->references('id')->on('inscricoes');

@@ -15,6 +15,8 @@ class Equipe extends Model
         'ativo'
     ];
 
+    public bool $softDeletes = true;
+
     public function atletas()
     {
         return $this->hasMany(Atleta::class, 'equipe_id');

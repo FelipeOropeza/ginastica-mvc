@@ -51,18 +51,29 @@ class AvaliacaoService
      */
     public function getProvasDesignadas(int $juradoId, int $competicaoId)
     {
-        $designacoes = (new JuradoDesignacao())
-            ->where('usuario_id', '=', $juradoId)
-            ->with(['prova'])
-            ->get();
+        // Filtra diretamente no SQL via JOIN (antes filtrava em PHP — ineficiente)
+        $db = \Core\Database\Connection::getInstance();
+        $stmt = $db->prepare("
+            SELECT d.*, p.id AS prova_id_ref
+            FROM designacoes_jurados d
+            JOIN provas p ON p.id = d.prova_id
+            WHERE d.usuario_id = :jurado_id
+              AND p.competicao_id = :competicao_id
+        ");
+        $stmt->execute(['jurado_id' => $juradoId, 'competicao_id' => $competicaoId]);
+        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
         $provas = [];
-        foreach ($designacoes as $d) {
-            if ($d->prova->competicao_id == $competicaoId) {
-                if (!isset($provas[$d->prova->id])) {
-                    $provas[$d->prova->id] = [
-                        'prova' => $d->prova,
-                        'designacao' => $d
+        foreach ($rows as $row) {
+            $provaId = $row['prova_id'];
+            if (!isset($provas[$provaId])) {
+                $designacao = (new JuradoDesignacao())->find($row['id']);
+                if ($designacao) {
+                    // Carrega a prova relacionada
+                    $designacao->prova = (new Prova())->find($provaId);
+                    $provas[$provaId] = [
+                        'prova'      => $designacao->prova,
+                        'designacao' => $designacao,
                     ];
                 }
             }
@@ -142,14 +153,10 @@ class AvaliacaoService
         }
 
         // Regra de prova encerrada: bloqueia NOVAS notas, mas permite re-entrada
-        // Se a nota não existe (foi deletada pelo admin via "Reabrir"), o juiz pode re-entrar
-        // Se a nota existe (checado acima), já foi bloqueado pelo $jaAvaliado
+        // Re-entrada é autorizada se o admin explicitamente reabriu a inscrição (reaberta=1)
         $prova = $inscricao->prova;
         if ($prova && $prova->encerrada) {
-            // A nota não existe (passou pelo check acima) — verificar se é uma re-entrada autorizada
-            // Se o resultado do atleta NÃO está calculado, significa que o admin reabriu algo
-            $resultado = (new Resultado())->where('inscricao_id', '=', $inscricaoId)->first();
-            $isReabertura = !$resultado || !$resultado->calculado;
+            $isReabertura = (bool) ($inscricao->reaberta ?? false);
 
             if (!$isReabertura) {
                 throw new ValidationException(['status' => "Esta prova (" . str_replace('_', ' ', $prova->aparelho) . ") já foi encerrada."]);
@@ -165,7 +172,13 @@ class AvaliacaoService
         $nota->registrado_em = date('Y-m-d H:i:s');
 
         if ($nota->save()) {
+            // Fecha a janela de reaberta após o juiz submeter a nota
+            if ($inscricao->reaberta) {
+                $inscricao->reaberta = 0;
+                $inscricao->save();
+            }
             $this->atualizarResultadoFinal($inscricaoId);
+
             return true;
         }
 
@@ -288,10 +301,23 @@ class AvaliacaoService
 
         if (empty($inscricoes)) return;
 
+        // Busca TODOS os resultados da prova em uma única query (antes era 1 query por atleta = N+1)
+        $inscricaoIds = array_map(fn($i) => $i->id, $inscricoes);
+        $resultados = (new Resultado())
+            ->whereIn('inscricao_id', $inscricaoIds)
+            ->get();
+
+        // Indexa por inscricao_id para lookup O(1)
+        $resultadoMap = [];
+        foreach ($resultados as $r) {
+            $resultadoMap[$r->inscricao_id] = $r;
+        }
+
+        // Verifica se todos têm resultado calculado
         foreach ($inscricoes as $ins) {
-            $resultado = (new Resultado())->where('inscricao_id', '=', $ins->id)->first();
+            $resultado = $resultadoMap[$ins->id] ?? null;
             if (!$resultado || !$resultado->calculado) {
-                return; // Ainda tem atleta pendente, não encerra
+                return; // Ainda tem atleta pendente
             }
         }
 

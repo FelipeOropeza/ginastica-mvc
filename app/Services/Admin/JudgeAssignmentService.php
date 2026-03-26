@@ -16,7 +16,7 @@ class JudgeAssignmentService
     public function getDesignacoesByProva(int $provaId)
     {
         return (new JuradoDesignacao())
-            ->where('prova_id', $provaId)
+            ->where('prova_id', '=', $provaId)
             ->with('jurado')
             ->get();
     }
@@ -32,7 +32,7 @@ class JudgeAssignmentService
             return [];
         }
 
-        return (new Usuario())->where('role_id', $roleJurado->id)->where('ativo', 1)->get();
+        return (new Usuario())->where('role_id', '=', $roleJurado->id)->where('ativo', '=', 1)->get();
     }
 
     /**
@@ -41,7 +41,7 @@ class JudgeAssignmentService
     public function assign(int $provaId, JudgeAssignmentDTO $dto)
     {
         // 1. Busca todas as designações atuais da prova para validação de regras de negócio
-        $designacoesAtuais = (new JuradoDesignacao())->where('prova_id', $provaId)->get();
+        $designacoesAtuais = (new JuradoDesignacao())->where('prova_id', '=', $provaId)->get();
 
         $hasGeral = false;
         $hasSplit = false;

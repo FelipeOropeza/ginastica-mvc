@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Controllers\Admin;
 
 use App\Services\Admin\CompetitionService;
@@ -76,35 +78,26 @@ class CompetitionController
             if (request()->isHtmx()) {
                 $error = array_shift($e->errors);
                 if (is_array($error)) $error = array_shift($error);
-                
-                // Retornamos o status original (re-renderizamos o badge antigo)
-                // ou apenas enviamos um trigger para o Toast
-                $competicaoOriginal = $this->service->findById($id);
-                
-                header('HX-Trigger: {"showAlert": {"type": "error", "message": "' . $error . '"}}');
-                
-                // Retornamos o badge original para "resetar" o estado visual no htmx
-                $statusClasses = [
-                    'rascunho' => 'bg-slate-100 text-slate-500 border-slate-200',
-                    'aberta' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
-                    'em_andamento' => 'bg-blue-50 text-blue-700 border-blue-200',
-                    'encerrada' => 'bg-rose-50 text-rose-700 border-rose-200',
-                ];
-                $statusLabels = [
-                    'rascunho' => 'Rascunho',
-                    'aberta' => 'Inscrições Abertas',
-                    'em_andamento' => 'Ativa',
-                    'encerrada' => 'Finalizada',
-                ];
-                $classe = $statusClasses[$competicaoOriginal->status] ?? 'bg-slate-100 text-slate-600';
-                $label = $statusLabels[$competicaoOriginal->status] ?? $competicaoOriginal->status;
 
-                return new Response("<button @click='open = !open; \$event.stopPropagation()' id='status-badge-{$id}' 
-                    class='px-2 py-1 rounded-lg border text-[9px] uppercase tracking-tighter font-black transition-all hover:brightness-95 flex items-center gap-1.5 shadow-sm {$classe}'>
-                    <span class='w-1.5 h-1.5 rounded-full bg-current opacity-50'></span>
-                    {$label}
-                    <i class='fa-solid fa-chevron-down opacity-30'></i>
-                </button>");
+                $competicaoOriginal = $this->service->findById($id);
+
+                header('HX-Trigger: {"showAlert": {"type": "error", "message": "' . $error . '"}}');
+
+                $allComps = $this->service->getAll();
+                $total = count($allComps);
+                $index = 0;
+                foreach ($allComps as $i => $c) {
+                    if ($c->id === $competicaoOriginal->id) {
+                        $index = $i;
+                        break;
+                    }
+                }
+
+                return view('admin/competicoes/partials/row', [
+                    'comp' => $competicaoOriginal,
+                    'total' => $total,
+                    'index' => $index,
+                ]);
             }
             throw $e;
         }

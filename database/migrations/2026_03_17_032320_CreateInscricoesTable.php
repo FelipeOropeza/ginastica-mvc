@@ -17,6 +17,8 @@ class CreateInscricoesTable
             // Status: pendente | confirmada | desclassificada | retirada
             $table->enum('status', ['pendente', 'confirmada', 'desclassificada', 'retirada'])->nullable();
             $table->timestamp('inscrito_em')->nullable();
+            $table->boolean('reaberta')->default(false);
+            $table->softDeletes();
             $table->timestamps();
 
             $table->foreign('atleta_id')->references('id')->on('atletas');
