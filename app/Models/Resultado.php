@@ -31,7 +31,7 @@ class Resultado extends Model
                 WHERE i.prova_id = :prova_id 
                   AND r.deleted_at IS NULL 
                   AND i.deleted_at IS NULL
-                ORDER BY r.nota_final DESC";
+                ORDER BY r.nota_final DESC, r.nota_e DESC";
 
         $stmt = $db->prepare($sql);
         $stmt->execute(['prova_id' => $provaId]);

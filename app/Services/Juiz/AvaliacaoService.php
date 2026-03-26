@@ -303,8 +303,29 @@ class AvaliacaoService
         $resultado->penalidade = $totalPenalidades;
         $resultado->nota_final = max(0, $notaFinal);
 
+        // --- LÓGICA INTELIGENTE DE CÁLCULO (QUÓRUM) ---
+        // Contamos quantos jurados foram designados para esta prova
+        $designacoes = (new JuradoDesignacao())->where('prova_id', '=', $prova->id)->get();
+        $totalDesignados = count($designacoes);
+        
+        // Em provas FIG, se o jurado é 'geral', ele manda 2 notas (D e E). 
+        // Caso contrário (bancas separadas), cada jurado manda 1 nota.
+        $extraFig = 0;
+        if ($prova->tipo_calculo === 'nota_d_mais_e') {
+            foreach ($designacoes as $d) {
+                if ($d->criterio === 'geral') $extraFig++;
+            }
+        }
+        
+        $votosEsperados = $totalDesignados + $extraFig;
+        
+        // Fallback: se não houver designações, usamos a configuração da prova ou o padrão
+        if ($votosEsperados === 0) {
+            $votosEsperados = $prova->num_jurados ?? 3;
+        }
+
         $numVotosTotal = count($votosD) + count($votosE) + count($votosGeral);
-        $resultado->calculado = (int) ($numVotosTotal >= ($prova->num_jurados ?? 3));
+        $resultado->calculado = (int) ($numVotosTotal >= $votosEsperados);
 
         if ($resultado->save()) {
             Resultado::calcularRanking($inscricao->prova_id);
