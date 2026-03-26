@@ -15,11 +15,6 @@ $porcentagem = $total > 0 ? ($avaliados / $total) * 100 : 0;
     <div class="flex items-center justify-between mb-2">
         <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Progresso da Avaliação</span>
         <span class="text-[10px] font-black text-primary-600 uppercase tracking-widest"><?= $avaliados ?> / <?= $total ?></span>
-<!-- Progress Bar OOB -->
-<div id="progress-container" hx-swap-oob="true" class="card p-4 mb-6 bg-white border-none shadow-sm">
-    <div class="flex items-center justify-between mb-2">
-        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Progresso da Avaliação</span>
-        <span class="text-[10px] font-black text-primary-600 uppercase tracking-widest"><?= $avaliados ?> / <?= $total ?></span>
     </div>
     <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
         <div class="h-full bg-primary-500 rounded-full transition-all duration-500" style="width: <?= $porcentagem ?>%"></div>
