@@ -8,6 +8,7 @@ class Nota extends Model
 {
     protected ?string $table = 'notas';
     protected array $fillable = ['inscricao_id', 'jurado_id', 'criterio', 'valor', 'observacao', 'registrado_em'];
+    public bool $softDeletes = true;
 
     public function inscricao()
     {

@@ -10,6 +10,36 @@
     </div>
 </div>
 
+<?php 
+    // Verifica se existem atletas confirmados sem ordem de apresentação
+    $atletasSemOrdem = (new \App\Models\Inscricao())
+        ->where('competicao_id', '=', $competicao->id)
+        ->where('status', '=', 'confirmada')
+        ->whereNull('ordem_apresentacao')
+        ->count();
+
+    if ($atletasSemOrdem > 0):
+?>
+    <div class="mb-6 p-4 rounded-2xl bg-amber-50 border border-amber-200 flex flex-col md:flex-row items-center justify-between gap-4 animate-in slide-in-from-top duration-500">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-xl shadow-inner">
+                <i class="fa-solid fa-shuffle"></i>
+            </div>
+            <div>
+                <h4 class="text-sm font-black text-amber-900 uppercase tracking-tight">Sorteio Pendente</h4>
+                <p class="text-xs text-amber-700 font-medium tracking-tight">Existem <?= $atletasSemOrdem ?> atletas confirmados aguardando ordem de apresentação para ativar a competição.</p>
+            </div>
+        </div>
+        <form hx-post="<?= route('admin.provas.shuffle_all', ['id' => $competicao->id]) ?>" 
+              hx-confirm="Deseja sortear automaticamente a ordem de todos os atletas em todas as provas?">
+            <button type="submit" class="btn bg-amber-600 hover:bg-amber-700 text-white border-amber-700 shadow-lg shadow-amber-600/20 text-[10px] font-black uppercase tracking-widest gap-2">
+                Sortear Todas as Provas <i class="fa-solid fa-wand-magic-sparkles"></i>
+            </button>
+        </form>
+    </div>
+<?php endif; ?>
+
+
 <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
     <!-- Form Nova Prova -->
     <div class="lg:col-span-1">

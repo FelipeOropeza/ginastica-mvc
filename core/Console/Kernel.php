@@ -844,32 +844,47 @@ class Kernel
                     foreach ($ranMigrations as $row) {
                         $file = $row['migration'];
                         $path = $dir . '/' . $file;
+                        $id = $row['id'];
+                        
                         if (file_exists($path)) {
+                            // Extrai o nome da classe do arquivo
                             $className = preg_replace('/^[0-9_]+_([a-zA-Z0-9]+)\.php$/', '$1', $file);
-                            require_once $path;
+                            
+                            try {
+                                require_once $path;
 
-                            $namespacedClass = "\\App\\Database\\Migrations\\$className";
-                            if (class_exists($namespacedClass)) {
-                                $className = $namespacedClass;
-                            }
-
-                            if (class_exists($className)) {
-                                $migration = new $className();
-                                if (method_exists($migration, 'down')) {
-                                    echo "[INFO] Rollback: $file\n";
-                                    $migration->down();
+                                $namespacedClass = "\\App\\Database\\Migrations\\$className";
+                                if (class_exists($namespacedClass)) {
+                                    $className = $namespacedClass;
                                 }
+
+                                if (class_exists($className)) {
+                                    $migration = new $className();
+                                    if (method_exists($migration, 'down')) {
+                                        echo "[INFO] Rollback: $file\n";
+                                        $migration->down();
+                                    }
+                                }
+                                
+                                // Remove o registro individual da migration após sucesso no rollback
+                                $pdoApp->exec("DELETE FROM migrations WHERE id = $id");
+
+                            } catch (\PDOException $e) {
+                                echo " ! Erro ao processar rollback de $file: " . $e->getMessage() . "\n";
+                                // Aqui você pode decidir se quer parar ou continuar. 
+                                // Geralmente continuamos tentando os outros.
+                            } catch (\Exception $e) {
+                                echo " ! Falha inesperada em $file: " . $e->getMessage() . "\n";
                             }
                         }
                     }
 
-                    $pdoApp->exec("TRUNCATE TABLE migrations");
-                    echo "\n✅ Rollback completado.\n\n";
+                    echo "\n✅ Operação de Rollback finalizada.\n\n";
                 } else {
                     echo "Nenhuma migration rodada detectada para rollback.\n\n";
                 }
             } catch (\PDOException $e) {
-                echo "A tabela 'migrations' não existe ou não foi criada ainda.\n\n";
+                echo "Erro ao acessar a tabela de migrations: " . $e->getMessage() . "\n\n";
             }
         }
 

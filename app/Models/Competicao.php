@@ -14,7 +14,7 @@ class Competicao extends Model
     /**
      * Uma competição tem várias provas/aparelhos.
      */
-    public function provas(): mixed
+    public function provas(): object
     {
         return $this->hasMany(Prova::class, 'competicao_id', 'id');
     }
@@ -22,7 +22,7 @@ class Competicao extends Model
     /**
      * Uma competição foi criada por um usuário.
      */
-    public function criador(): mixed
+    public function criador(): object
     {
         return $this->belongsTo(Usuario::class, 'criado_por', 'id');
     }

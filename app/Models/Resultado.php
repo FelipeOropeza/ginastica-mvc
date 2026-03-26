@@ -12,6 +12,8 @@ class Resultado extends Model
         'nota_final', 'classificacao', 'podio', 'calculado'
     ];
 
+    public bool $softDeletes = true;
+
     public function inscricao()
     {
         return $this->belongsTo(Inscricao::class, 'inscricao_id');
@@ -27,6 +29,8 @@ class Resultado extends Model
         $sql = "SELECT r.* FROM resultados r 
                 JOIN inscricoes i ON r.inscricao_id = i.id 
                 WHERE i.prova_id = :prova_id 
+                  AND r.deleted_at IS NULL 
+                  AND i.deleted_at IS NULL
                 ORDER BY r.nota_final DESC";
 
         $stmt = $db->prepare($sql);

@@ -13,6 +13,8 @@ class Usuario extends Model
     /**
      * Relacionamento com o papel (Role) do usuário.
      */
+    public bool $softDeletes = true;
+
     public function role()
     {
         return $this->belongsTo(\App\Models\Role::class, 'role_id');
