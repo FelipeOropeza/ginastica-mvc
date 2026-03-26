@@ -93,7 +93,17 @@
                             <?php endif; ?>
                         </div>
                     <?php else: ?>
-                        <span class="text-[10px] font-bold text-slate-300 uppercase">Sem notas</span>
+                        <div class="flex flex-col items-end gap-2 text-right">
+                            <span class="text-[10px] font-bold text-slate-300 uppercase">Sem notas</span>
+                            <?php if (!$compEncerrada): ?>
+                                <form action="/admin/inscricoes/<?= $ins->id ?>/reabrir" method="POST"
+                                      onsubmit="return confirm('Autorizar juízes a lançar nota para este atleta? Ele aparecerá novamente na fila de avaliação.')">
+                                    <button type="submit" class="px-3 py-1.5 rounded-xl bg-primary-50 text-primary-600 hover:bg-primary-100 border border-primary-100 text-[10px] font-black uppercase tracking-widest transition-all shadow-sm">
+                                        <i class="fa-solid fa-cloud-arrow-up mr-1 text-xs"></i> Autorizar Lançamento
+                                    </button>
+                                </form>
+                            <?php endif; ?>
+                        </div>
                     <?php endif; ?>
                 </div>
 

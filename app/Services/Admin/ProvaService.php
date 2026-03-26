@@ -135,4 +135,25 @@ class ProvaService
 
         return $provaId;
     }
+    /**
+     * Autoriza o lançamento de nota para um atleta, mesmo com prova encerrada.
+     * Útil quando um atleta foi pulado ou precisa de nova nota sem deletar a anterior.
+     */
+    public function autorizarLancamento(int $inscricaoId): int
+    {
+        $inscricao = (new \App\Models\Inscricao())->with(['prova', 'competicao'])->find($inscricaoId);
+
+        if (!$inscricao) {
+            abort(404, 'Inscrição não encontrada.');
+        }
+
+        if ($inscricao->competicao && $inscricao->competicao->status === 'encerrada') {
+            throw new \Core\Exceptions\ValidationException(['status' => 'A competição já foi encerrada.']);
+        }
+
+        $inscricao->reaberta = 1;
+        $inscricao->save();
+
+        return $inscricao->prova_id;
+    }
 }

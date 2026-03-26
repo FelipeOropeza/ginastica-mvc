@@ -152,5 +152,13 @@ class ProvaController
 
         return Response::makeRedirect("/admin/provas/{$provaId}/notas");
     }
+
+    #[Post('/admin/inscricoes/{id}/reabrir', name: 'admin.inscricoes.reabrir')]
+    public function autorizarLancamento(int $id)
+    {
+        $provaId = $this->provaService->autorizarLancamento($id);
+
+        return Response::makeRedirect("/admin/provas/{$provaId}/notas");
+    }
 }
 

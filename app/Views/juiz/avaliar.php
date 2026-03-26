@@ -3,21 +3,18 @@
 <?php
 $avaliados = 0;
 foreach ($inscricoes as $ins) {
-    if ($ins->notaPorJurado) $avaliados++;
+    if (!empty($ins->notas)) $avaliados++;
 }
 $total = count($inscricoes);
-$porcentagem = $total > 0 ? ($avaliados / $total) * 100 : 0;
 $porcentagem = $total > 0 ? ($avaliados / $total) * 100 : 0;
 ?>
 
 <!-- Progress Bar OOB -->
-<div id="progress-container" hx-swap-oob="true" class="card p-4 mb-6 bg-white border-none shadow-sm hx-target-fade">
+<div id="progress-container" hx-swap-oob="true">
     <div class="flex items-center justify-between mb-2">
         <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Progresso da Avaliação</span>
         <span class="text-[10px] font-black text-primary-600 uppercase tracking-widest"><?= $avaliados ?> / <?= $total ?></span>
     </div>
-    <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-        <div class="h-full bg-primary-500 rounded-full transition-all duration-500" style="width: <?= $porcentagem ?>%"></div>
     <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
         <div class="h-full bg-primary-500 rounded-full transition-all duration-500" style="width: <?= $porcentagem ?>%"></div>
     </div>
@@ -63,9 +60,7 @@ $porcentagem = $total > 0 ? ($avaliados / $total) * 100 : 0;
         </div>
 
         <!-- Área Central de Avaliação -->
-        <div id="evaluation-center" 
-             class="relative min-h-[400px]"
-             <?= $jaAvaliouAtivo ? 'hx-get="'.route('juiz.avaliar', ['prova_id' => $prova->id]).'" hx-trigger="every 5s" hx-select="#evaluation-center" hx-swap="outerHTML"' : '' ?>>
+        <div id="evaluation-center" class="relative min-h-[400px]">
             
             <?php if ($atletaAtivo): ?>
                 <?php 
@@ -85,7 +80,7 @@ $porcentagem = $total > 0 ? ($avaliados / $total) * 100 : 0;
                             <div class="flex-1">
                                 <span class="text-[11px] font-black text-primary-600 uppercase tracking-widest block mb-2">Ginasta Ativo</span>
                                 <h3 class="text-3xl md:text-5xl font-outfit font-black text-slate-800 tracking-tight leading-tight">
-                                    <?= e($currentIns->atleta->nome_completo) ?>
+                                    <?= e($currentIns->atleta->nome_completo ?? 'Sem Nome') ?>
                                 </h3>
                                 <div class="flex items-center gap-3 mt-4">
                                     <span class="text-xs font-bold text-slate-400 uppercase tracking-wider"><?= e($currentIns->atleta->equipe->nome ?? 'Avulso') ?></span>
@@ -161,15 +156,11 @@ $porcentagem = $total > 0 ? ($avaliados / $total) * 100 : 0;
                                             <input name="valor" type="number" step="0.001" min="0" max="<?= $max ?>" placeholder="0.000" autofocus required id="input-nota"
                                                    class="w-full h-full min-h-[80px] px-8 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/5 outline-none transition-all font-outfit font-black text-4xl text-center text-slate-800 placeholder:text-slate-200">
                                             
-                                            <div class="absolute -top-3 left-6 flex gap-2 child-inline">
+                                            <div class="absolute -top-3 left-6">
                                                 <label class="px-2 <?= $color ?> text-white text-[9px] font-black uppercase tracking-widest rounded-lg shadow-md leading-loose">
-                                                    <?= e($label) ?>
+                                                    <?= e($label) ?> (Max: <?= number_format($max, 1) ?>)
                                                 </label>
-                                                <span class="px-2 bg-slate-800 text-white text-[9px] font-black uppercase tracking-widest rounded-lg shadow-md leading-loose">
-                                                    Max: <?= number_format($max, 1) ?>
-                                                </span>
                                             </div>
-                                            <p class="text-center mt-2 text-[9px] font-bold text-slate-400 uppercase tracking-widest">Insira o valor da sua avaliação</p>
                                         </div>
                                     <?php endif; ?>
                                     
@@ -210,7 +201,7 @@ $porcentagem = $total > 0 ? ($avaliados / $total) * 100 : 0;
             <?php foreach ($inscricoes as $ins): ?>
                 <?php 
                     $isAtivo = $atletaAtivo && $ins->id === $atletaAtivo->id;
-                    $jaVotou = (bool) $ins->notaPorJurado;
+                    $jaVotou = !empty($ins->notas);
                 ?>
                 <div class="card p-3 border-none transition-all duration-300 <?= $isAtivo ? 'bg-primary-600 text-white shadow-lg -translate-x-2' : ($jaVotou ? 'bg-emerald-50/50 opacity-60' : 'bg-white') ?>">
                     <div class="flex items-center gap-3">
@@ -224,7 +215,7 @@ $porcentagem = $total > 0 ? ($avaliados / $total) * 100 : 0;
                         
                         <div class="flex-1 min-w-0">
                             <h4 class="font-bold text-xs truncate <?= $isAtivo ? 'text-white' : 'text-slate-800' ?>">
-                                <?= e($ins->atleta->nome_completo) ?>
+                                <?= e($ins->atleta->nome_completo ?? 'N/A') ?>
                             </h4>
                             <p class="text-[9px] font-bold uppercase tracking-tight opacity-60">
                                 <?= e($ins->atleta->equipe->nome ?? 'Avulso') ?>
@@ -250,12 +241,7 @@ $porcentagem = $total > 0 ? ($avaliados / $total) * 100 : 0;
         <div class="card p-4 bg-slate-900 text-white border-none shadow-xl mt-6">
             <div class="flex items-start gap-3">
                 <i class="fa-solid fa-keyboard text-primary-400 mt-0.5"></i>
-        <div class="card p-4 bg-slate-900 text-white border-none shadow-xl mt-6">
-            <div class="flex items-start gap-3">
-                <i class="fa-solid fa-keyboard text-primary-400 mt-0.5"></i>
                 <div>
-                    <h5 class="text-[9px] font-black text-primary-400 uppercase tracking-widest mb-1">Dica de Produtividade</h5>
-                    <p class="text-[11px] text-slate-400 leading-snug">O cursor foca automaticamente no campo de nota. Após digitar, aperte <kbd class="px-1 bg-white/10 rounded text-white inline-block">Enter</kbd> para enviar rápido.</p>
                     <h5 class="text-[9px] font-black text-primary-400 uppercase tracking-widest mb-1">Dica de Produtividade</h5>
                     <p class="text-[11px] text-slate-400 leading-snug">O cursor foca automaticamente no campo de nota. Após digitar, aperte <kbd class="px-1 bg-white/10 rounded text-white inline-block">Enter</kbd> para enviar rápido.</p>
                 </div>
@@ -283,7 +269,7 @@ $porcentagem = $total > 0 ? ($avaliados / $total) * 100 : 0;
         }
     });
 
-    // Atalho de teclado para focar (Esc ou f)
+    // Atalho de teclado para focar (Esc)
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') setupFocus();
     });

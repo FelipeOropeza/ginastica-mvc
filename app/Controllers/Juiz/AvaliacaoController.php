@@ -114,15 +114,17 @@ class AvaliacaoController
                 $notaD = (float) str_replace(',', '.', trim((string)request()->get('nota_d')));
                 $notaE = (float) str_replace(',', '.', trim((string)request()->get('nota_e')));
                 
-                $this->service->registrarNota($juradoId, $inscricao_id, $notaD, $observacao, 'nota_d');
-                $this->service->registrarNota($juradoId, $inscricao_id, $notaE, $observacao, 'nota_e');
+                $this->service->registrarMultiplasNotas($juradoId, $inscricao_id, [
+                    'nota_d' => $notaD,
+                    'nota_e' => $notaE
+                ], $observacao);
             } else {
                 // Caso padrão (um único valor)
                 $rawValor = request()->get('valor');
                 $normalizedValor = str_replace(',', '.', trim((string)$rawValor));
                 $valor = (float) $normalizedValor;
                 
-                $this->service->registrarNota($juradoId, $inscricaoId = $inscricao_id, $valor, $observacao);
+                $this->service->registrarNota($juradoId, $inscricao_id, $valor, $observacao);
             }
             
             if (request()->isHtmx()) {

@@ -108,9 +108,44 @@ class AvaliacaoService
     }
 
     /**
-     * Registra a nota para um atleta.
+     * Registra múltiplas notas de uma vez (Ex: D e E quando o juiz faz ambas).
+     * Evita que o auto-encerramento interrompa o processo entre as notas.
      */
-    public function registrarNota(int $juradoId, int $inscricaoId, float $valor, ?string $observacao = null, ?string $criterio = null)
+    public function registrarMultiplasNotas(int $juradoId, int $inscricaoId, array $notas, ?string $observacao = null)
+    {
+        $db = \Core\Database\Connection::getInstance();
+        $db->beginTransaction();
+
+        try {
+            foreach ($notas as $criterio => $valor) {
+                // Ao registrar múltiplas, passamos um booleano interno para adiar o cálculo
+                $this->registrarNota($juradoId, $inscricaoId, (float)$valor, $observacao, $criterio, true);
+            }
+
+            // Agora sim, calculamos o resultado apenas uma vez
+            $this->atualizarResultadoFinal($inscricaoId);
+            
+            // Fecha a janela de reaberta após o conjunto completo ser salvo
+            $ins = (new Inscricao())->find($inscricaoId);
+            if ($ins && $ins->reaberta) {
+                $ins->reaberta = 0;
+                $ins->save();
+            }
+
+            $db->commit();
+            return true;
+        } catch (\Exception $e) {
+            $db->rollBack();
+            throw $e;
+        }
+    }
+
+    /**
+     * Registra a nota para um atleta.
+     * 
+     * @param bool $adiarCalculo Se true, não chama atualizarResultadoFinal (usado por registrarMultiplasNotas)
+     */
+    public function registrarNota(int $juradoId, int $inscricaoId, float $valor, ?string $observacao = null, ?string $criterio = null, bool $adiarCalculo = false)
     {
         $inscricao = (new Inscricao())->with(['competicao', 'prova'])->where('id', '=', $inscricaoId)->first();
 
@@ -172,12 +207,15 @@ class AvaliacaoService
         $nota->registrado_em = date('Y-m-d H:i:s');
 
         if ($nota->save()) {
-            // Fecha a janela de reaberta após o juiz submeter a nota
-            if ($inscricao->reaberta) {
+            // Fecha a janela de reaberta após o juiz submeter a(s) nota(s)
+            // Se for registro múltiplo (adiarCalculo=true), o reset é feito pelo chamador
+            if ($inscricao->reaberta && !$adiarCalculo) {
                 $inscricao->reaberta = 0;
                 $inscricao->save();
             }
-            $this->atualizarResultadoFinal($inscricaoId);
+            if (!$adiarCalculo) {
+                $this->atualizarResultadoFinal($inscricaoId);
+            }
 
             return true;
         }
