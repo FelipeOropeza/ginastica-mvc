@@ -13,7 +13,8 @@ class CreateDesignacoesJuradosTable
             $table->integer('usuario_id')->unsigned(); // usuário com role 'jurado'
             // Critério que este jurado avalia nesta prova:
             // nota_d = Dificuldade | nota_e = Execução | arbitro_superior | geral
-            $table->enum('criterio', ['nota_d', 'nota_e', 'arbitro_superior', 'geral'])->nullable();
+            $table->enum('criterio', ['nota_d', 'nota_e', 'arbitro_superior', 'geral', 'penalidade'])->nullable();
+            $table->softDeletes();
             $table->timestamps();
 
             $table->foreign('prova_id')->references('id')->on('provas');

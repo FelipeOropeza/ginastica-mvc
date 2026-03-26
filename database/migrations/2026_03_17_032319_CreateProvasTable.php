@@ -24,6 +24,7 @@ class CreateProvasTable
 
             $table->integer('num_jurados')->nullable(); // Quantos jurados avaliam esta prova
             $table->boolean('encerrada')->nullable();
+            $table->softDeletes();
             $table->timestamps();
 
             $table->foreign('competicao_id')->references('id')->on('competicoes');

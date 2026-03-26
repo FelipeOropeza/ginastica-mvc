@@ -11,7 +11,7 @@ $porcentagem = $total > 0 ? ($avaliados / $total) * 100 : 0;
 ?>
 
 <!-- Progress Bar OOB -->
-<div id="progress-container" hx-swap-oob="true" class="card p-4 mb-6 bg-white border-none shadow-sm">
+<div id="progress-container" hx-swap-oob="true" class="card p-4 mb-6 bg-white border-none shadow-sm hx-target-fade">
     <div class="flex items-center justify-between mb-2">
         <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Progresso da Avaliação</span>
         <span class="text-[10px] font-black text-primary-600 uppercase tracking-widest"><?= $avaliados ?> / <?= $total ?></span>
@@ -28,7 +28,7 @@ $porcentagem = $total > 0 ? ($avaliados / $total) * 100 : 0;
     </div>
 </div>
 
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in duration-500">
     <div class="lg:col-span-2 space-y-6">
         
         <!-- Header de Informações da Prova -->
@@ -111,7 +111,6 @@ $porcentagem = $total > 0 ? ($avaliados / $total) * 100 : 0;
                                     </div>
                                     <h4 class="text-lg font-outfit font-black text-slate-800 mb-1">Nota Registrada</h4>
                                     <?php 
-                                        // Somamos todas as notas deste jurado caso tenha enviado D + E separadamente
                                         $votoTotal = 0;
                                         foreach($currentIns->notas as $n) {
                                             if ($n->jurado_id == session('user')['id']) {
@@ -119,7 +118,7 @@ $porcentagem = $total > 0 ? ($avaliados / $total) * 100 : 0;
                                             }
                                         }
                                     ?>
-                                    <p class="text-sm font-bold text-emerald-600 mb-4"><?= number_format($votoTotal, 3) ?></p>
+                                    <p class="text-3xl font-outfit font-black text-emerald-600 mb-4"><?= number_format($votoTotal, 3) ?></p>
                                     <div class="px-6 py-2 rounded-full bg-slate-50 border border-slate-200 flex items-center gap-3">
                                         <div class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></div>
                                         <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Aguardando outros juízes...</span>
@@ -141,7 +140,6 @@ $porcentagem = $total > 0 ? ($avaliados / $total) * 100 : 0;
                                     ?>
                                     
                                     <?php if ($isFig && $isGeral): ?>
-                                        <!-- Caso especial: Juiz Único no Sistema FIG (D+E) -->
                                         <div class="grid grid-cols-2 gap-4 flex-1">
                                             <div class="relative">
                                                 <input name="nota_d" type="number" step="0.001" min="0" max="20" placeholder="0.000" autofocus required id="input-nota-d"
@@ -159,7 +157,6 @@ $porcentagem = $total > 0 ? ($avaliados / $total) * 100 : 0;
                                             </div>
                                         </div>
                                     <?php else: ?>
-                                        <!-- Juiz normal ou outros sistemas -->
                                         <div class="relative flex-1">
                                             <?php 
                                                 $max = ($designacao->criterio === 'nota_d') ? 20 : 10;
@@ -167,9 +164,9 @@ $porcentagem = $total > 0 ? ($avaliados / $total) * 100 : 0;
                                                 $color = $designacao->criterio === 'nota_d' ? 'bg-blue-600' : ($designacao->criterio === 'nota_e' ? 'bg-emerald-600' : 'bg-primary-600');
                                             ?>
                                             <input name="valor" type="number" step="0.001" min="0" max="<?= $max ?>" placeholder="0.000" autofocus required id="input-nota"
-                                                   class="w-full h-full min-h-[80px] px-8 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/5 outline-none transition-all font-outfit font-black text-3xl text-center text-slate-800 placeholder:text-slate-200">
+                                                   class="w-full h-full min-h-[80px] px-8 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/5 outline-none transition-all font-outfit font-black text-4xl text-center text-slate-800 placeholder:text-slate-200">
                                             
-                                            <div class="absolute -top-3 left-6 flex gap-2">
+                                            <div class="absolute -top-3 left-6 flex gap-2 child-inline">
                                                 <label class="px-2 <?= $color ?> text-white text-[9px] font-black uppercase tracking-widest rounded-lg shadow-md leading-loose">
                                                     <?= e($label) ?>
                                                 </label>
@@ -177,7 +174,7 @@ $porcentagem = $total > 0 ? ($avaliados / $total) * 100 : 0;
                                                     Max: <?= number_format($max, 1) ?>
                                                 </span>
                                             </div>
-                                            <p class="text-center mt-1.5 text-[9px] font-bold text-slate-400 uppercase tracking-widest">Insira o valor da sua avaliação</p>
+                                            <p class="text-center mt-2 text-[9px] font-bold text-slate-400 uppercase tracking-widest">Insira o valor da sua avaliação</p>
                                         </div>
                                     <?php endif; ?>
                                     
@@ -214,47 +211,45 @@ $porcentagem = $total > 0 ? ($avaliados / $total) * 100 : 0;
 
     <div class="space-y-4">
         <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Fila de Apresentação</h3>
-        <div id="atleta-list-container">
-            <div id="atletas-list" hx-swap-oob="true" class="space-y-2">
-                <?php foreach ($inscricoes as $ins): ?>
-                    <?php 
-                        $isAtivo = $atletaAtivo && $ins->id === $atletaAtivo->id;
-                        $jaVotou = (bool) $ins->notaPorJurado;
-                    ?>
-                    <div class="card p-3 border-none transition-all duration-300 <?= $isAtivo ? 'bg-primary-600 text-white shadow-lg -translate-x-2' : ($jaVotou ? 'bg-emerald-50/50 opacity-60' : 'bg-white') ?>">
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-lg flex items-center justify-center text-[11px] font-black <?= $isAtivo ? 'bg-white/20' : ($jaVotou ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-400') ?>">
-                                <?php if ($jaVotou): ?>
-                                    <i class="fa-solid fa-check"></i>
-                                <?php else: ?>
-                                    <?= $ins->ordem_apresentacao ?: '#' ?>
-                                <?php endif; ?>
-                            </div>
-                            
-                            <div class="flex-1 min-w-0">
-                                <h4 class="font-bold text-xs truncate <?= $isAtivo ? 'text-white' : 'text-slate-800' ?>">
-                                    <?= e($ins->atleta->nome_completo) ?>
-                                </h4>
-                                <p class="text-[9px] font-bold uppercase tracking-tight opacity-60">
-                                    <?= e($ins->atleta->equipe->nome ?? 'Avulso') ?>
-                                </p>
-                            </div>
-
+        <div id="atletas-list" class="space-y-2">
+            <?php foreach ($inscricoes as $ins): ?>
+                <?php 
+                    $isAtivo = $atletaAtivo && $ins->id === $atletaAtivo->id;
+                    $jaVotou = (bool) $ins->notaPorJurado;
+                ?>
+                <div class="card p-3 border-none transition-all duration-300 <?= $isAtivo ? 'bg-primary-600 text-white shadow-lg -translate-x-2' : ($jaVotou ? 'bg-emerald-50/50 opacity-60' : 'bg-white') ?>">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg flex items-center justify-center text-[11px] font-black <?= $isAtivo ? 'bg-white/20' : ($jaVotou ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-400') ?>">
                             <?php if ($jaVotou): ?>
-                                <?php 
-                                    $votoSoma = 0;
-                                    foreach($ins->notas as $n) {
-                                        if ($n->jurado_id == session('user')['id']) $votoSoma += $n->valor;
-                                    }
-                                ?>
-                                <span class="text-[10px] font-black font-outfit <?= $isAtivo ? 'text-white' : 'text-slate-600' ?>">
-                                    <?= number_format($votoSoma, 3) ?>
-                                </span>
+                                <i class="fa-solid fa-check"></i>
+                            <?php else: ?>
+                                <?= $ins->ordem_apresentacao ?: '#' ?>
                             <?php endif; ?>
                         </div>
+                        
+                        <div class="flex-1 min-w-0">
+                            <h4 class="font-bold text-xs truncate <?= $isAtivo ? 'text-white' : 'text-slate-800' ?>">
+                                <?= e($ins->atleta->nome_completo) ?>
+                            </h4>
+                            <p class="text-[9px] font-bold uppercase tracking-tight opacity-60">
+                                <?= e($ins->atleta->equipe->nome ?? 'Avulso') ?>
+                            </p>
+                        </div>
+
+                        <?php if ($jaVotou): ?>
+                            <?php 
+                                $votoSoma = 0;
+                                foreach($ins->notas as $n) {
+                                    if ($n->jurado_id == session('user')['id']) $votoSoma += $n->valor;
+                                }
+                            ?>
+                            <span class="text-[10px] font-black font-outfit <?= $isAtivo ? 'text-white' : 'text-slate-600' ?>">
+                                <?= number_format($votoSoma, 3) ?>
+                            </span>
+                        <?php endif; ?>
                     </div>
-                <?php endforeach; ?>
-            </div>
+                </div>
+            <?php endforeach; ?>
         </div>
 
         <div class="card p-4 bg-slate-900 text-white border-none shadow-xl mt-6">
@@ -273,3 +268,28 @@ $porcentagem = $total > 0 ? ($avaliados / $total) * 100 : 0;
         </div>
     </div>
 </div>
+
+<script>
+    function setupFocus() {
+        const input = document.getElementById('input-nota') || document.getElementById('input-nota-d');
+        if (input) {
+            input.focus();
+            input.select();
+        }
+    }
+
+    // Executa no load inicial
+    document.addEventListener('DOMContentLoaded', setupFocus);
+
+    // Executa após trocas do HTMX
+    document.body.addEventListener('htmx:afterSwap', (evt) => {
+        if (evt.detail.target.id === 'evaluation-center') {
+            setupFocus();
+        }
+    });
+
+    // Atalho de teclado para focar (Esc ou f)
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') setupFocus();
+    });
+</script>
