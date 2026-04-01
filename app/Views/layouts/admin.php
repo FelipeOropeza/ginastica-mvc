@@ -89,7 +89,10 @@
                 <i class="fa-solid fa-calendar-check w-4"></i> Competições
             </a>
             <a href="<?= route('admin.usuarios.index') ?>" class="nav-link <?= (str_contains($_SERVER['REQUEST_URI'], 'usuarios') || str_contains($_SERVER['REQUEST_URI'], 'atletas')) ? 'active' : '' ?>">
-                <i class="fa-solid fa-users w-4"></i> Usuários
+                <i class="fa-solid fa-users w-4"></i> Usurios
+            </a>
+            <a href="<?= route('admin.assistente.index') ?>" class="nav-link <?= str_contains($_SERVER['REQUEST_URI'], 'assistente') ? 'active' : '' ?>">
+                <i class="fa-solid fa-robot w-4 text-indigo-400"></i> Assistente IA
             </a>
             
             <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider px-3 mt-6 mb-2 opacity-50">Configurações</div>
