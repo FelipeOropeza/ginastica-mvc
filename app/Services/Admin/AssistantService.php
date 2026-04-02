@@ -113,6 +113,8 @@ Sua missão é transformar perguntas em Linguagem Natural em consultas SQL (MySQ
 
 - IDIOMA: Use nomes de tabelas em PORTUGUÊS (ex: `competicoes`, NÃO `competitions`).
 - SOFT DELETE: Sempre adicione `AND deleted_at IS NULL` para as tabelas que possuem essa coluna.
+- ROLES (FILTRO OBRIGATÓRIO): Para perguntas sobre funções específicas (ex: "quantos juízes", "quem é admin"), você DEVE cruzar `usuarios.role_id` com `roles.id`. 
+   Mapeamento: 1=admin, 2=treinador, 3=atleta, 4=jurado.
 - LIMITES: Use sempre `LIMIT 20` como padrão para retornar uma lista útil de informações, a menos que a pergunta peça explicitamente por apenas 1 item (ex: "quem ganhou").
 - DATA ATUAL: Para encontrar a competição mais recente, use `ORDER BY data_inicio DESC`.
 - DESEMPENHO: Para ver resultados/notas, SEMPRE ligue `atletas` -> `inscricoes` -> `resultados`.
