@@ -1,98 +1,115 @@
-# MVC Base Project (Micro Framework)
+# 🏆 GymPodium — Gestão de Competições de Ginástica
 
-Um esqueleto PHP puro, ultra-leve e focado em performance (Stateless). Construído do zero para suportar a Arquitetura Moderna do PHP: Container de Injeção de Dependências (PSR-11 feeling), Cycle de Request/Response via Middlewares (PSR-15 feeling), Service Providers e preparado para servidores assíncronos como o FrankenPHP.
+![PHP](https://img.shields.io/badge/PHP-8.5+-8892BF?style=for-the-badge&logo=php&logoColor=white)
+![FrankenPHP](https://img.shields.io/badge/FrankenPHP-Worker_Mode-00ADD8?style=for-the-badge&logo=caddy&logoColor=white)
+![Mercure](https://img.shields.io/badge/Mercure-Real--Time-27AE60?style=for-the-badge&logo=mercure&logoColor=white)
+![HTMX](https://img.shields.io/badge/HTMX-High_Performance-3D72D7?style=for-the-badge&logo=htmx&logoColor=white)
 
-## Principais Features Atuais
-
-* **Arquitetura Stateless**: Sem vazamentos globais (Globals como `$_GET` e `$_POST` são embalados no objeto `Request`). 
-* **Container de Injeção de Dependências (IoC)**: Autowiring de classes inteligentes via Reflection API. Funções Globais como `app()` e `logger()`.
-* **Sessões e Proteção CSRF Nativa**: Gerenciamento de sessão Orientado a Objetos integrado ao pipeline (Middlewares) e proteção fácil de formulários contra ataques Cross-Site Request Forgery.
-* **Router Expressivo e Rápido**: Suporte a parâmetros dinâmicos na URL, **Grupos de Rotas** e agora com suporte total a **PHP 8 Attributes** (`#[Get]`, `#[Post]`) diretamente nos Controllers para maior produtividade.
-* **Eventos em Tempo Real (Mercure)**: Integração nativa com o hub Mercure para broadcasting de eventos instantâneos. Use o helper `broadcast()` no PHP e receba atualizações automáticas no front-end via HTMX ou JavaScript puro.
-* **Docker & FrankenPHP Integrado**: Ambiente pronto para a nuvem. Utiliza a imagem oficial do FrankenPHP com suporte nativo ao **Mercure Hub** (embutido no Caddy) e operando com o **Worker Mode** para performance extrema na casa dos milissegundos.
-* **Service Providers Lifecycle**: Motor flexível similar ao Laravel, permitindo construção modular de recursos através de classes simples no `config/app.php`.
-* **Database Avançado (ORM)**: Modelos trazem um `QueryBuilder` embutido para queries complexas fluidas, Suporte a Relacionamentos (`belongsTo`, `hasMany`), e Gatilhos de Mutação e Validação acoplados.
-* **Upload Seguro e Storage**: Abstração Orientada a Objetos robusta para manipulação e validação de `UploadedFile`.
-* **Segurança e Log de Falhas**: Exceções são silenciadas no arquivo `storage/logs/app.log` se o modo de debug estiver inativo (`APP_DEBUG=false`), blindando a visão do usuário final num Deploy de Produção.
-* **Suporte Nativo ao HTMX**: Métodos utilitários nativos de Request e Response (`isHtmx()`, `hxTrigger()`), além de motor PHP capaz de isolar renderização de componentes parciais (pular Layout Mestre).
-* **API & JWT Suporte Nativa**: Ferramentas para construir APIs Stateless protegidas por **JSON Web Tokens**. Comando `setup:api` para scaffold rápido.
-* **Sistema de E-mails Robusto**: Abstração de e-mails via PHPMailer com suporte a SMTP e drivers configuráveis.
-* **Filas e Processamento Assíncrono (Queues)**: Adie tarefas pesadas para background com drivers de **Banco de Dados** ou **Redis**.
-* **Cache Inteligente**: Drivers de **Arquivo** e **Redis** para armazenamento temporário e alta performance.
-* **Início Rápido com Docker**: Ambiente com **Redis** e MariaDB pré-configurados no `docker-compose.yml`.
-* **CLI (Forge)**: Uma ferramenta de console robusta para criar código, rodar migrações e processar filas.
-
-## Documentação
-
-Para mergulhar fundo e aprender a separar a lógica da sua aplicação de forma profissional num MVC, construir modelos, usar o Validator baseado em PHP 8 Attributes e a CLI do Framework, consulte a documentação dedicada na pasta `docs/`:
-
-=> [Ler a Documentação do Motor MVC](docs/framework.md)
+O **GymPodium** é um sistema completo e moderno para gerenciamento de competições de ginástica, construído sobre um micro-framework MVC autoral focado em alta performance (Stateless). O projeto utiliza tecnologias de ponta como **FrankenPHP** (em Worker Mode), **HTMX** para interfaces dinâmicas e **Mercure** para atualizações de ranking em tempo real.
 
 ---
 
-## Início Rápido (Instalação e Teste)
+## ⚡ Diferenciais Tecnológicos
 
-### Método 1: Via Composer (Recomendado)
-A forma mais fácil de criar a aplicação é rodar o `create-project`. Ele baixará a última versão, iniciará o **instalador interativo** e limpará os arquivos de instalação ao finalizar.
+*   **Arquitetura Stateless & High Performance**: Core construído para rodar em servidores assíncronos, com injeção de dependências via Reflection API e autowiring inteligente.
+*   **Ranking em Tempo Real (Mercure Hub)**: Utiliza o protocolo SSE via Mercure (embutido no Caddy do FrankenPHP) para atualizar placares e rankings instantaneamente para o público sem recarregar a página.
+*   **UX Dinâmica com HTMX**: Navegação fluida e atualizações parciais de interface, eliminando a complexidade de SPAs pesadas enquanto mantém a interatividade.
+*   **Worker Mode Nativo**: Integrado ao ecossistema FrankenPHP, permitindo que a aplicação permaneça na memória entre requisições, atingindo tempos de resposta na casa dos milissegundos.
 
+---
+
+## 🚀 Funcionalidades Principais
+
+### 🏛️ Painel Administrativo
+*   **Gestão de Competições & Provas**: CRUD completo de competições com definição de categorias, locais e datas.
+*   **Atribuição de Juízes**: Designação de juízes específicos para avaliar provas ou atletas determinados.
+*   **Relatórios & Exportação**: Geração de rankings e resultados finais em formatos CSV e PDF.
+
+### ⚖️ Interface do Juiz
+*   **Avaliação Ágil**: Interface otimizada via HTMX para entrada rápida de notas por critério (Dificuldade, Execução, Apresentação).
+*   **Feedback Instantâneo**: Confirmação visual de envio da nota sem interrupção do fluxo de trabalho.
+
+### 🏃 Portal do Atleta
+*   **Inscrições Online**: Processo simplificado para atletas se inscreverem em competições abertas.
+*   **Histórico de Performance**: Visualização detalhada de notas e evolução ao longo das competições.
+
+---
+
+## 🛠️ Stack Técnica
+
+| Camada | Tecnologia |
+|---|---|
+| **Linguagem** | PHP 8.5+ (Strict Types) |
+| **Servidor Web** | FrankenPHP / Caddy |
+| **Banco de Dados** | MySQL |
+| **Cache & Filas** | Redis |
+| **Front-end** | HTMX + Tailwind CSS 4 + Mercure (SSE) |
+| **Infraestrutura** | Docker Compose |
+| **Framework** | Custom MVC (Micro-framework Stateless) |
+
+---
+
+## 🔧 Instalação e Configuração
+
+### Requisitos
+*   Docker & Docker Compose
+*   *Ou PHP 8.5+ e Composer (para modo tradicional)*
+
+### 1. Clonar e Instalar
 ```bash
-composer create-project felipe-code/mvc-base nome-do-seu-projeto
-```
-
-### Método 2: Via Git Clone Manual
-Se preferir clonar o repositório, você pode engatilhar o instalador interativo logo em seguida com os comandos abaixo:
-
-```bash
-git clone https://github.com/FelipeOropeza/mvc-estrutura.git meu-app
-cd meu-app
+git clone https://github.com/FelipeOropeza/ginastica-mvc.git gympodium
+cd gympodium
 composer install
-composer run post-create-project-cmd
 ```
 
-### Método 3: Via Docker (Alta Performance com FrankenPHP)
-O projeto já conta com o poderoso ambiente Docker pré-configurado. Se você possui o Docker instalado e quer máxima performance, basta levantar os containers, e ele montará automaticamente o PHP8 com o Worker Mode:
+### 2. Configuração do Ambiente
+Crie o arquivo `.env` a partir do exemplo e configure suas credenciais:
+```bash
+cp .env.example .env
+```
 
+### 3. Subir com Docker (Recomendado)
+Este comando sobe o ambiente completo com FrankenPHP (Worker Mode), Banco de Dados, Redis e o Hub Mercure:
 ```bash
 docker-compose up -d --build
 ```
+Acesse `http://localhost:8000`.
 
-Acesse `http://localhost:8000` no seu navegador. O Servidor FrankenPHP gerenciará nativamente a aplicação!
-
----
-
-### Iniciando o Servidor Local Seguro (Modo Tradicional via PHP CLI):
-Se não for usar o Docker, uma vez que o projeto esteja instanciado, inicie o servidor interno:
+### 4. Migrações e Seeders
 ```bash
-composer start
-```
-*(O script `start` inicia o servidor embutido do PHP apontando para a pasta `/public`, garantindo a segurança dos arquivos internos).*
-
-Acesse `http://localhost:8000` no seu navegador.
-
----
-
-### Comandos Rápidos da CLI (Forge):
-```bash
-php forge make:controller NomeController
-php forge make:model TabelaModel
-php forge make:view secao/nova-view
-php forge make:component nome_componente
-php forge make:migration CreateUsersTable
-php forge make:middleware VerificarAcessoMiddleware
-php forge make:rule CpfValido
-php forge make:mutator LimpaCpf
 php forge migrate
-php forge setup:engine twig
-php forge setup:auth
-php forge setup:api
-php forge setup:aviso
-php forge queue:work
+php forge db:seed RolesSeeder
+php forge db:seed AdminUserSeeder
 ```
 
-## Exemplos Reais
+---
 
-* [**Avisos em Tempo Real**](docs/REALTIME_DEMO.md): Guia prático para testar o sistema de notificações instantâneas com HTMX e Mercure.
+## 🛠️ CLI Forge (Comandos Úteis)
 
-## Licença
+O projeto conta com uma ferramenta de linha de comando poderosa para automação:
 
-MIT
+```bash
+# Criação de código
+php forge make:controller NomeController
+php forge make:model NomeModel
+php forge make:service NomeService
+php forge make:migration NovaTabela
+
+# Banco de Dados
+php forge migrate          # Roda migrations pendentes
+php forge migrate:refresh  # Reseta e roda as migrations novamente
+
+# Processamento
+php forge queue:work       # Inicia o worker para processar filas
+php forge optimize         # Compila rotas para cache de performance
+```
+
+---
+
+## 📄 Licença
+
+Este projeto está sob a licença [MIT](LICENSE).
+
+---
+
+> Desenvolvido com foco em excelência técnica e performance por [Felipe](mailto:felipe2006.co@gmail.com).
